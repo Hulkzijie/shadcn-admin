@@ -1,13 +1,23 @@
 import { useRef, useState, type DragEvent } from 'react'
-import { CloudUpload, File as FileIcon, X } from 'lucide-react'
+import {
+  CircleAlert,
+  CircleCheck,
+  CloudUpload,
+  File as FileIcon,
+  Loader2,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { MAX_FILE_COUNT } from '../data/knowledge-types'
+import {
+  type KnowledgeFileEntry,
+  MAX_FILE_COUNT,
+} from '../data/knowledge-types'
 import { filterFiles, formatBytes } from '../lib/knowledge-service'
 
 type UploadZoneProps = {
-  files: File[]
+  files: KnowledgeFileEntry[]
   onAddFiles: (files: File[]) => void
   onRemoveFile: (index: number) => void
   allowedExtensions: string[]
@@ -82,24 +92,42 @@ export function UploadZone({
 
       {files.length > 0 && (
         <ul className='space-y-2'>
-          {files.map((file, i) => (
+          {files.map((entry, i) => (
             <li
-              key={`${file.name}-${i}`}
+              key={`${entry.file.name}-${i}`}
               className='flex items-center gap-3 rounded-lg border bg-card p-3'
             >
               <FileIcon className='size-4 shrink-0 text-muted-foreground' />
-              <span className='min-w-0 flex-1 truncate text-sm' title={file.name}>
-                {file.name}
+              <span
+                className='min-w-0 flex-1 truncate text-sm'
+                title={entry.file.name}
+              >
+                {entry.file.name}
               </span>
+              {entry.status === 'uploading' && (
+                <span className='flex shrink-0 items-center gap-1 text-xs text-muted-foreground'>
+                  <Loader2 className='size-3.5 animate-spin' />
+                  上传中
+                </span>
+              )}
+              {entry.status === 'done' && (
+                <CircleCheck className='size-4 shrink-0 text-emerald-600' />
+              )}
+              {entry.status === 'error' && (
+                <span className='flex shrink-0 items-center gap-1 text-xs text-destructive'>
+                  <CircleAlert className='size-3.5' />
+                  {entry.error ?? '上传失败'}
+                </span>
+              )}
               <span className='shrink-0 text-xs text-muted-foreground'>
-                {formatBytes(file.size)}
+                {formatBytes(entry.file.size)}
               </span>
               <Button
                 type='button'
                 variant='ghost'
                 size='icon'
                 className='size-7'
-                aria-label={`移除 ${file.name}`}
+                aria-label={`移除 ${entry.file.name}`}
                 onClick={() => onRemoveFile(i)}
               >
                 <X className='size-4' />

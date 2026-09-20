@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import { handleServerError } from '@/lib/handle-server-error'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -8,22 +10,35 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { CreateKnowledgeBaseDialog } from './components/create-knowledge-base-dialog'
+import { IngestProgressDialog } from './components/ingest-progress-dialog'
 import { KnowledgeBaseGrid } from './components/knowledge-base-grid'
-import { type KnowledgeBaseItem } from './data/knowledge-types'
+import {
+  type CreateKnowledgeBaseInput,
+  type KnowledgeBaseItem,
+} from './data/knowledge-types'
+import { createKnowledgeBase } from './lib/knowledge-service'
 
 export function KnowledgeBase() {
   const [items, setItems] = useState<KnowledgeBaseItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // 创建成功后进入入库流程的知识库，用于展示节点进度
+  const [ingesting, setIngesting] = useState<KnowledgeBaseItem | null>(null)
 
-  const handleCreate = (data: Omit<KnowledgeBaseItem, 'id' | 'createdAt'>) => {
-    setItems((prev) => [
-      {
-        ...data,
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-      },
-      ...prev,
-    ])
+  const handleCreate = async (data: CreateKnowledgeBaseInput) => {
+    try {
+      setIsSubmitting(true)
+
+      const item = await createKnowledgeBase(data)
+      setItems((prev) => [item, ...prev])
+      setIngesting(item)
+      toast.success('知识库创建成功，正在入库处理')
+    } catch (error) {
+      handleServerError(error)
+      throw error
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleDelete = (id: string) => {
@@ -60,6 +75,16 @@ export function KnowledgeBase() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onCreate={handleCreate}
+        isSubmitting={isSubmitting}
+      />
+
+      <IngestProgressDialog
+        open={!!ingesting}
+        onOpenChange={(open) => {
+          if (!open) setIngesting(null)
+        }}
+        knowledgeBaseId={ingesting?.id ?? null}
+        knowledgeBaseName={ingesting?.name ?? ''}
       />
     </>
   )

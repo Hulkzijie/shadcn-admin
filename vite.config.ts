@@ -8,6 +8,21 @@ import { playwright } from '@vitest/browser-playwright'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 9100,
+    proxy: {
+      '/java-api': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/java-api/, ''),
+      },
+      '/py-api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/py-api/, ''),
+      },
+    },
+  },
   plugins: [
     tanstackRouter({
       target: 'react',

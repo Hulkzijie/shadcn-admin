@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { FileText, Table2, ImageIcon, Sparkles, Layers } from 'lucide-react'
+import { toast } from 'sonner'
+import { handleServerError } from '@/lib/handle-server-error'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -26,12 +28,14 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  type KnowledgeBaseItem,
+  type CreateKnowledgeBaseInput,
   type KnowledgeDataType,
+  type KnowledgeFileEntry,
   type SegmentMode,
   dataTypeOptions,
   uploadFormats,
 } from '../data/knowledge-types'
+import { uploadFile } from '../lib/knowledge-service'
 import { UploadZone } from './upload-zone'
 
 const dataTypeIcons: Record<KnowledgeDataType, typeof FileText> = {
@@ -43,18 +47,20 @@ const dataTypeIcons: Record<KnowledgeDataType, typeof FileText> = {
 type CreateKnowledgeBaseDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (data: Omit<KnowledgeBaseItem, 'id' | 'createdAt'>) => void
+  onCreate: (data: CreateKnowledgeBaseInput) => Promise<void>
+  isSubmitting: boolean
 }
 
 export function CreateKnowledgeBaseDialog({
   open,
   onOpenChange,
   onCreate,
+  isSubmitting,
 }: CreateKnowledgeBaseDialogProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [dataType, setDataType] = useState<KnowledgeDataType>('unstructured')
-  const [files, setFiles] = useState<File[]>([])
+  const [files, setFiles] = useState<KnowledgeFileEntry[]>([])
 
   // 分段处理：自动分段与清洗 / 自定义
   const [segmentMode, setSegmentMode] = useState<SegmentMode>('auto')
@@ -62,6 +68,7 @@ export function CreateKnowledgeBaseDialog({
   const [preprocessRules, setPreprocessRules] = useState('')
   // 知识增强
   const [enhancement, setEnhancement] = useState(false)
+  const [embeddingModel, setEmbeddingModel] = useState('qwen3-embedding')
 
   // 允许上传的格式随数据类型联动
   const allowedExtensions = useMemo(() => {
@@ -78,18 +85,77 @@ export function CreateKnowledgeBaseDialog({
     setSegmentLength('500')
     setPreprocessRules('')
     setEnhancement(false)
+    setEmbeddingModel('qwen3-embedding')
   }
 
-  const handleCreate = () => {
-    if (!name.trim()) return
-    onCreate({
-      name: name.trim(),
-      description: description.trim(),
-      dataType,
-      fileCount: files.length,
-      segmentMode,
-      enhancement,
+  // 选择文件后立即上传，逐个文件更新其上传状态
+  const handleAddFiles = (accepted: File[]) => {
+    const entries: KnowledgeFileEntry[] = accepted.map((file) => ({
+      file,
+      status: 'uploading',
+    }))
+    setFiles((prev) => [...prev, ...entries])
+
+    const updateEntry = (target: File, patch: Partial<KnowledgeFileEntry>) => {
+      setFiles((prev) =>
+        prev.map((item) =>
+          item.file === target ? { ...item, ...patch } : item
+        )
+      )
+    }
+
+    entries.forEach((entry) => {
+      uploadFile(entry.file)
+        .then((uploaded) =>
+          updateEntry(entry.file, { status: 'done', uploaded })
+        )
+        .catch((error) => {
+          handleServerError(error)
+          updateEntry(entry.file, { status: 'error', error: '上传失败' })
+        })
     })
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const uploadingCount = files.filter((f) => f.status === 'uploading').length
+
+  const uploadedFileIds = files.flatMap((entry) =>
+    entry.status === 'done' && entry.uploaded ? [entry.uploaded.id] : []
+  )
+
+  const handleCreate = async () => {
+    if (!name.trim()) return
+    if (uploadingCount > 0) {
+      toast.error('文件上传中，请稍候')
+      return
+    }
+    if (uploadedFileIds.length === 0) {
+      toast.error('请先上传至少一个文件')
+      return
+    }
+
+    try {
+      await onCreate({
+        name: name.trim(),
+        description: description.trim(),
+        dataType,
+        fileIds: uploadedFileIds,
+        segmentMode,
+        segmentLength:
+          segmentMode === 'custom' && segmentLength.trim()
+            ? Number(segmentLength)
+            : null,
+        preprocessRules: segmentMode === 'custom' ? preprocessRules.trim() : '',
+        enhancement,
+        embeddingModel,
+      })
+    } catch {
+      // 错误已由 handleCreate 统一提示，这里保持弹窗开启
+      return
+    }
     reset()
     onOpenChange(false)
   }
@@ -206,12 +272,8 @@ export function CreateKnowledgeBaseDialog({
               <CardContent>
                 <UploadZone
                   files={files}
-                  onAddFiles={(accepted) =>
-                    setFiles((prev) => [...prev, ...accepted])
-                  }
-                  onRemoveFile={(index) =>
-                    setFiles((prev) => prev.filter((_, i) => i !== index))
-                  }
+                  onAddFiles={handleAddFiles}
+                  onRemoveFile={handleRemoveFile}
                   allowedExtensions={allowedExtensions}
                 />
               </CardContent>
@@ -307,7 +369,10 @@ export function CreateKnowledgeBaseDialog({
                       用于将文本转换为向量以支持语义检索
                     </p>
                   </div>
-                  <Select defaultValue='qwen3-embedding'>
+                  <Select
+                    value={embeddingModel}
+                    onValueChange={setEmbeddingModel}
+                  >
                     <SelectTrigger className='w-52'>
                       <SelectValue placeholder='选择模型' />
                     </SelectTrigger>
@@ -344,11 +409,23 @@ export function CreateKnowledgeBaseDialog({
         </ScrollArea>
 
         <DialogFooter className='border-t px-6 py-4'>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
+          <Button
+            variant='outline'
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             取消
           </Button>
-          <Button onClick={handleCreate} disabled={!name.trim()}>
-            创建
+          <Button
+            onClick={handleCreate}
+            disabled={
+              !name.trim() ||
+              uploadedFileIds.length === 0 ||
+              uploadingCount > 0 ||
+              isSubmitting
+            }
+          >
+            {isSubmitting ? '创建中...' : '创建'}
           </Button>
         </DialogFooter>
       </DialogContent>
