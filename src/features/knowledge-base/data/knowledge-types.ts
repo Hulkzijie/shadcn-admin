@@ -36,34 +36,51 @@ export type KnowledgeBaseItem = {
   name: string
   description: string
   dataType: KnowledgeDataType
+  /** 关联的文件 id 列表，即创建接口 fileIds 的入参 */
+  fileIds: string[]
+  /** 各文件对应的入库任务摘要，列表项内嵌，用于轮询 /status/{task_id} */
+  ingestTasks: IngestTaskSummary[]
   fileCount: number
   segmentMode: SegmentMode
   enhancement: boolean
   createdAt: number
 }
 
-/** 入库任务中单个节点的状态 */
-export type IngestNodeStatus = 'pending' | 'running' | 'done' | 'error'
+/** 入库任务 / 节点状态 */
+export type IngestNodeStatus = 'pending' | 'running' | 'done' | 'failed'
 
-/** 入库任务节点，如「PDF转Markdown」「文档切分」 */
+/** 入库任务节点，如「文件解析」「文件入库」 */
 export type IngestNode = {
   name: string
   status: IngestNodeStatus
   /** 节点耗时（毫秒），未开始时为 null */
   durationMs: number | null
+  /** 失败原因，仅 status 为 failed 时有值 */
+  message?: string
 }
 
-/** 单个文件的入库任务 */
+/** 单个文件的入库任务，id 即 /status/{task_id} 中的 task_id */
 export type IngestTask = {
   id: string
-  fileName: string
-  fileSize: number
+  fileId?: string
+  fileName?: string
   status: IngestNodeStatus
+  /** 当前正在执行 / 卡住的节点名，无则为 null */
+  currentNode: string | null
   /** 整体进度百分比 0-100 */
   progress: number
   /** 总耗时（毫秒） */
   elapsedMs: number
+  /** 完整节点清单（含未开始的节点） */
   nodes: IngestNode[]
+}
+
+/** 列表项内嵌的入库任务摘要，用于定位轮询所需的 task_id */
+export type IngestTaskSummary = {
+  taskId: string
+  fileId?: string
+  fileName?: string
+  status: IngestNodeStatus
 }
 
 export type KnowledgeDataType = 'unstructured' | 'structured' | 'multimodal'

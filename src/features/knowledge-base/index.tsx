@@ -1,7 +1,18 @@
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { handleServerError } from '@/lib/handle-server-error'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
@@ -16,23 +27,44 @@ import {
   type CreateKnowledgeBaseInput,
   type KnowledgeBaseItem,
 } from './data/knowledge-types'
-import { createKnowledgeBase } from './lib/knowledge-service'
+import {
+  createKnowledgeBase,
+  deleteKnowledgeBase,
+  fetchKnowledgeBases,
+  getIngestTasks,
+} from './lib/knowledge-service'
 
 export function KnowledgeBase() {
-  const [items, setItems] = useState<KnowledgeBaseItem[]>([])
+  const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  // 创建成功后进入入库流程的知识库，用于展示节点进度
-  const [ingesting, setIngesting] = useState<KnowledgeBaseItem | null>(null)
+  // 当前查看入库进度的知识库
+  const [progressTarget, setProgressTarget] =
+    useState<KnowledgeBaseItem | null>(null)
+  // 待删除确认的知识库
+  const [deleteTarget, setDeleteTarget] = useState<KnowledgeBaseItem | null>(
+    null
+  )
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const {
+    data: items = [],
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ['knowledge-bases'],
+    queryFn: fetchKnowledgeBases,
+  })
 
   const handleCreate = async (data: CreateKnowledgeBaseInput) => {
     try {
       setIsSubmitting(true)
 
       const item = await createKnowledgeBase(data)
-      setItems((prev) => [item, ...prev])
-      setIngesting(item)
+      setProgressTarget(item)
       toast.success('知识库创建成功，正在入库处理')
+      await refetch()
     } catch (error) {
       handleServerError(error)
       throw error
@@ -41,8 +73,22 @@ export function KnowledgeBase() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      setIsDeleting(true)
+      await deleteKnowledgeBase(deleteTarget.id)
+      queryClient.setQueryData<KnowledgeBaseItem[]>(
+        ['knowledge-bases'],
+        (prev) => prev?.filter((item) => item.id !== deleteTarget.id)
+      )
+      toast.success('知识库已删除')
+      setDeleteTarget(null)
+    } catch (error) {
+      handleServerError(error)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -68,7 +114,13 @@ export function KnowledgeBase() {
           </Button>
         </div>
 
-        <KnowledgeBaseGrid items={items} onDelete={handleDelete} />
+        <KnowledgeBaseGrid
+          items={items}
+          isLoading={isPending}
+          isError={isError}
+          onDelete={setDeleteTarget}
+          onViewProgress={setProgressTarget}
+        />
       </Main>
 
       <CreateKnowledgeBaseDialog
@@ -79,13 +131,43 @@ export function KnowledgeBase() {
       />
 
       <IngestProgressDialog
-        open={!!ingesting}
+        open={!!progressTarget}
         onOpenChange={(open) => {
-          if (!open) setIngesting(null)
+          if (!open) setProgressTarget(null)
         }}
-        knowledgeBaseId={ingesting?.id ?? null}
-        knowledgeBaseName={ingesting?.name ?? ''}
+        summaries={progressTarget ? getIngestTasks(progressTarget) : []}
+        knowledgeBaseName={progressTarget?.name ?? ''}
       />
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除该知识库？</AlertDialogTitle>
+            <AlertDialogDescription>
+              删除后「{deleteTarget?.name}」及其已入库的数据将无法恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              className='bg-destructive text-white hover:bg-destructive/90'
+              onClick={(event) => {
+                // 阻止默认的关闭行为，等接口返回后再关闭
+                event.preventDefault()
+                void handleDelete()
+              }}
+            >
+              {isDeleting ? '删除中…' : '删除'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
