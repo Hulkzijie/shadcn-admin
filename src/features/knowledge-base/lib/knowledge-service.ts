@@ -103,10 +103,17 @@ function toStringList(value: unknown): string[] {
  * 后端形如 tasks: [{ file_id, file_name, task_id }]，其中 task_id 才是 /status/{task_id} 的入参。
  */
 function pickIngestTasks(source: unknown): IngestTaskSummary[] {
-  const tasks = pick(source, ['tasks', 'taskList', 'task_list'])
+  const tasks = pick(source, [
+    'tasks',
+    'taskList',
+    'task_list',
+    'items',
+    'list',
+    'data',
+  ])
   if (!Array.isArray(tasks)) return []
   return tasks.flatMap((task) => {
-    const taskId = pickString(task, ['task_id', 'taskId'])
+    const taskId = pickString(task, ['task_id', 'taskId', 'id'])
     if (!taskId) return []
     return [
       {
@@ -120,20 +127,40 @@ function pickIngestTasks(source: unknown): IngestTaskSummary[] {
 }
 
 /**
- * 创建响应里拿到的入库任务暂存表。
- * GET /knowledge-base 暂不返回 tasks，关闭进度弹窗后再从卡片打开会拿不到 task_id，用它兜底。
+ * 入库任务暂存表（kbId → tasks）。
+ * 只有 POST /import 会返回 task_id，而创建 / 列表接口都不带 tasks，
+ * 因此用 localStorage 缓存，保证关闭弹窗或刷新页面后仍能从卡片查看进度。
  */
-const ingestTaskCache = new Map<string, IngestTaskSummary[]>()
+const INGEST_TASK_CACHE_KEY = 'kb-ingest-tasks'
 
-function rememberIngestTasks(kbId: string, tasks: IngestTaskSummary[]) {
-  if (tasks.length > 0) ingestTaskCache.set(kbId, tasks)
+function readIngestTaskCache(): Record<string, IngestTaskSummary[]> {
+  try {
+    const raw = localStorage.getItem(INGEST_TASK_CACHE_KEY)
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null
+    return parsed && typeof parsed === 'object'
+      ? (parsed as Record<string, IngestTaskSummary[]>)
+      : {}
+  } catch {
+    return {}
+  }
 }
 
-/** 优先用列表项内嵌的 tasks，缺失时回退到创建时暂存的任务 */
+function rememberIngestTasks(kbId: string, tasks: IngestTaskSummary[]) {
+  if (tasks.length === 0) return
+  try {
+    const cache = readIngestTaskCache()
+    cache[kbId] = tasks
+    localStorage.setItem(INGEST_TASK_CACHE_KEY, JSON.stringify(cache))
+  } catch {
+    // localStorage 不可用时静默忽略，仅影响刷新后从卡片查看进度
+  }
+}
+
+/** 优先用接口内嵌的 tasks，缺失时回退到缓存的任务 */
 export function getIngestTasks(item: KnowledgeBaseItem): IngestTaskSummary[] {
   return item.ingestTasks.length > 0
     ? item.ingestTasks
-    : (ingestTaskCache.get(item.id) ?? [])
+    : (readIngestTaskCache()[item.id] ?? [])
 }
 
 /** 知识库 id：列表 / 创建 / 删除响应统一用 kbId */
@@ -221,6 +248,20 @@ export async function createKnowledgeBase(
     enhancement: input.enhancement,
     createdAt: Date.now(),
   }
+}
+
+/**
+ * 提交文件入库：POST /py-api/import（JSON）。
+ * 这是唯一返回 task_id 的接口，创建知识库后必须调用，否则无法查询入库进度。
+ */
+export async function importFiles(
+  kbId: string,
+  fileIds: string[]
+): Promise<IngestTaskSummary[]> {
+  const { data } = await fastapiClient.post('/import', { kbId, fileIds })
+  const tasks = pickIngestTasks(data)
+  rememberIngestTasks(kbId, tasks)
+  return tasks
 }
 
 const DATA_TYPES: KnowledgeDataType[] = [
@@ -448,6 +489,33 @@ export async function fetchIngestTasks(
       return normalizeTaskStatus(data, summary)
     })
   )
+}
+
+/**
+ * 查询已有知识库的入库任务。列表接口可能不包含 task_id，
+ * 此接口用于点击「查看入库进度」时补拉任务并兼容旧后端响应。
+ */
+export async function fetchKnowledgeBaseIngestTasks(
+  knowledgeBaseId: string
+): Promise<IngestTask[]> {
+  const { data } = await fastapiClient.get(
+    `/knowledge-base/${encodeURIComponent(knowledgeBaseId)}/ingest-tasks`
+  )
+  const list = Array.isArray(data)
+    ? data
+    : pick(data, ['tasks', 'taskList', 'task_list', 'items', 'list', 'data'])
+  if (!Array.isArray(list)) return []
+
+  return list.map((raw, index) => {
+    const taskId =
+      pickString(raw, ['task_id', 'taskId', 'id']) ?? `task-${index}`
+    return normalizeTaskStatus(raw, {
+      taskId,
+      fileId: pickString(raw, ['file_id', 'fileId']),
+      fileName: pickString(raw, ['file_name', 'fileName', 'name']),
+      status: normalizeStatus(pick(raw, ['status', 'state']), 'pending'),
+    })
+  })
 }
 
 /**

@@ -14,16 +14,25 @@ const TYPING_CHARS_PER_TICK = 1
 type ChatInterfaceProps = {
   messages: ChatMessage[]
   waiting: boolean
+  animateAssistant?: boolean
+  autoFocus?: boolean
   onSend: (content: string) => void
 }
 
 export function ChatInterface({
   messages,
   waiting,
+  animateAssistant = false,
+  autoFocus = false,
   onSend,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('')
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus()
+  }, [autoFocus])
 
   // 打字机状态：当前正在逐字显示的消息 id、已显示字符数、已完成显示的消息 id 集合
   const [typingId, setTypingId] = useState<string | null>(null)
@@ -87,13 +96,15 @@ export function ChatInterface({
   // 该消息是否正在以打字机方式显示（尚未完成且为最后一条 assistant 消息）
   const isStreaming = (msg: ChatMessage) =>
     msg.role === 'assistant' &&
+    animateAssistant &&
+    !waiting &&
     !completedIds.has(msg.id) &&
     (msg.id === typingId || msg === lastMsg)
 
   return (
-    <div className='flex h-full w-full flex-col rounded-md border bg-card shadow-xs'>
+    <div className='flex h-full min-h-0 w-full flex-col rounded-md border bg-card shadow-xs'>
       {/* 消息区 */}
-      <div ref={scrollRef} className='flex-1 overflow-y-auto p-4'>
+      <div ref={scrollRef} className='min-h-0 flex-1 overflow-y-auto p-4'>
         <div className='flex flex-col gap-4'>
           {messages.map((msg) => {
             const streaming = isStreaming(msg)
@@ -141,6 +152,7 @@ export function ChatInterface({
         className='flex w-full flex-none gap-2 p-3 sm:p-4'
       >
         <Textarea
+          ref={inputRef}
           placeholder='Type your message...'
           value={input}
           onChange={(e) => setInput(e.target.value)}

@@ -24,7 +24,11 @@ import {
   type IngestTask,
   type IngestTaskSummary,
 } from '../data/knowledge-types'
-import { fetchIngestTasks, formatDuration } from '../lib/knowledge-service'
+import {
+  fetchIngestTasks,
+  fetchKnowledgeBaseIngestTasks,
+  formatDuration,
+} from '../lib/knowledge-service'
 
 const POLL_INTERVAL = 2000
 
@@ -33,6 +37,7 @@ type IngestProgressDialogProps = {
   onOpenChange: (open: boolean) => void
   /** 待查询的入库任务，来自创建响应或列表项内嵌的 tasks */
   summaries: IngestTaskSummary[]
+  knowledgeBaseId: string
   knowledgeBaseName: string
 }
 
@@ -199,6 +204,7 @@ export function IngestProgressDialog({
   open,
   onOpenChange,
   summaries,
+  knowledgeBaseId,
   knowledgeBaseName,
 }: IngestProgressDialogProps) {
   const taskIds = summaries.map((item) => item.taskId)
@@ -208,9 +214,12 @@ export function IngestProgressDialog({
     isPending,
     isError,
   } = useQuery({
-    queryKey: ['ingest-tasks', summaries],
-    queryFn: () => fetchIngestTasks(summaries),
-    enabled: open && taskIds.length > 0,
+    queryKey: ['ingest-tasks', knowledgeBaseId, taskIds, summaries],
+    queryFn: () =>
+      taskIds.length > 0
+        ? fetchIngestTasks(summaries)
+        : fetchKnowledgeBaseIngestTasks(knowledgeBaseId),
+    enabled: open && Boolean(knowledgeBaseId),
     // 轮询接口不做重试，失败即停，避免持续请求
     retry: false,
     refetchInterval: (query) => {

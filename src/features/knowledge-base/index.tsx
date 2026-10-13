@@ -32,6 +32,7 @@ import {
   deleteKnowledgeBase,
   fetchKnowledgeBases,
   getIngestTasks,
+  importFiles,
 } from './lib/knowledge-service'
 
 export function KnowledgeBase() {
@@ -62,7 +63,9 @@ export function KnowledgeBase() {
       setIsSubmitting(true)
 
       const item = await createKnowledgeBase(data)
-      setProgressTarget(item)
+      // /import 返回各文件的 task_id，是后续轮询入库进度的唯一来源
+      const ingestTasks = await importFiles(item.id, item.fileIds)
+      setProgressTarget({ ...item, ingestTasks })
       toast.success('知识库创建成功，正在入库处理')
       await refetch()
     } catch (error) {
@@ -136,6 +139,7 @@ export function KnowledgeBase() {
           if (!open) setProgressTarget(null)
         }}
         summaries={progressTarget ? getIngestTasks(progressTarget) : []}
+        knowledgeBaseId={progressTarget?.id ?? ''}
         knowledgeBaseName={progressTarget?.name ?? ''}
       />
 
