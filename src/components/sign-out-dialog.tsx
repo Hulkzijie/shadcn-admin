@@ -12,10 +12,10 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const location = useLocation()
   const { auth } = useAuthStore()
 
-  const handleSignOut = () => {
-    auth.reset()
-    // Preserve current location for redirect after sign-in
-    const currentPath = location.href
+  const handleSignOut = async () => {
+    // 保留当前路径，便于重新登录后跳回
+    const currentPath = location.pathname + location.searchStr
+    await auth.logout()
     navigate({
       to: '/sign-in',
       search: { redirect: currentPath },

@@ -50,7 +50,9 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
   bio: 'I own a computer.',
-  urls: [{ value: 'https://wisecloud.si' }],
+  urls: [
+    { value: 'https://wisecloud.si' },
+  ],
 }
 
 export function ProfileForm() {

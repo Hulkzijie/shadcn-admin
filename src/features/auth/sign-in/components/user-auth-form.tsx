@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Loader2, LogIn } from 'lucide-react'
+import { Loader2, LogIn, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -19,16 +19,19 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { getCodeImg } from '@/features/auth/api/auth-api'
 
 const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
-  }),
-  password: z
-    .string()
-    .min(1, 'Please enter your password.')
-    .min(7, 'Password must be at least 7 characters long.'),
+  username: z.string().min(1, '请输入用户名'),
+  password: z.string().min(1, '请输入密码').min(5, '密码至少 5 个字符'),
+  code: z.string().optional(),
 })
+
+interface CaptchaState {
+  enabled: boolean
+  uuid: string
+  img: string
+}
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
@@ -40,45 +43,61 @@ export function UserAuthForm({
   ...props
 }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [captcha, setCaptcha] = useState<CaptchaState>({
+    enabled: false,
+    uuid: '',
+    img: '',
+  })
   const navigate = useNavigate()
   const { auth } = useAuthStore()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
+      code: '',
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  // 获取/刷新验证码
+  const refreshCaptcha = useCallback(async () => {
+    try {
+      const res = await getCodeImg()
+      const { captchaEnabled, uuid, img } = res.data.data
+      setCaptcha({ enabled: captchaEnabled, uuid, img })
+    } catch {
+      // 获取失败时按未开启验证码处理，避免阻塞登录
+      setCaptcha({ enabled: false, uuid: '', img: '' })
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshCaptcha()
+  }, [refreshCaptcha])
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    if (captcha.enabled && !data.code) {
+      form.setError('code', { message: '请输入验证码' })
+      return
+    }
+
     setIsLoading(true)
-
-    toast.promise(sleep(2000), {
-      loading: 'Signing in...',
-      success: () => {
-        setIsLoading(false)
-
-        // Mock successful authentication with expiry computed at success time
-        const mockUser = {
-          accountNo: 'ACC001',
-          email: data.email,
-          role: ['user'],
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-        }
-
-        // Set user and access token
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
-        navigate({ to: targetPath, replace: true })
-
-        return `Welcome back, ${data.email}!`
-      },
-      error: 'Error',
-    })
+    try {
+      await auth.login(data.username, data.password, data.code, captcha.uuid)
+      toast.success(`欢迎回来，${data.username}！`)
+      const targetPath = redirectTo || '/'
+      navigate({ to: targetPath, replace: true })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '登录失败，请重试'
+      toast.error(message)
+      // 登录失败后验证码已失效，清空并刷新
+      form.setValue('code', '')
+      await refreshCaptcha()
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -90,12 +109,12 @@ export function UserAuthForm({
       >
         <FormField
           control={form.control}
-          name='email'
+          name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>用户名</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input placeholder='请输入用户名' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -106,23 +125,59 @@ export function UserAuthForm({
           name='password'
           render={({ field }) => (
             <FormItem className='relative'>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>密码</FormLabel>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput placeholder='请输入密码' {...field} />
               </FormControl>
               <FormMessage />
               <Link
                 to='/forgot-password'
                 className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
               >
-                Forgot password?
+                忘记密码？
               </Link>
             </FormItem>
           )}
         />
+        {captcha.enabled && (
+          <FormField
+            control={form.control}
+            name='code'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>验证码</FormLabel>
+                <div className='flex items-center gap-2'>
+                  <FormControl>
+                    <Input
+                      placeholder='请输入验证码'
+                      autoComplete='off'
+                      {...field}
+                    />
+                  </FormControl>
+                  <button
+                    type='button'
+                    onClick={() => void refreshCaptcha()}
+                    className='group relative h-9 w-28 shrink-0 overflow-hidden rounded-md border'
+                    title='点击刷新验证码'
+                  >
+                    <img
+                      src={`data:image/png;base64,${captcha.img}`}
+                      alt='验证码'
+                      className='h-full w-full object-cover'
+                    />
+                    <span className='absolute inset-0 hidden items-center justify-center bg-background/70 group-hover:flex'>
+                      <RefreshCw className='size-4' />
+                    </span>
+                  </button>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <Button className='mt-2' disabled={isLoading}>
           {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
-          Sign in
+          登录
         </Button>
 
         <div className='relative my-2'>
@@ -131,7 +186,7 @@ export function UserAuthForm({
           </div>
           <div className='relative flex justify-center text-xs uppercase'>
             <span className='bg-background px-2 text-muted-foreground'>
-              Or continue with
+              其他登录方式
             </span>
           </div>
         </div>
