@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router'
+import { Bot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -27,6 +29,11 @@ export function Dashboard() {
         <Search />
         <ThemeSwitch />
         <ConfigDrawer />
+        <Button asChild size='sm'>
+          <Link to='/agent'>
+            <Bot />
+          </Link>
+        </Button>
         <ProfileDropdown />
       </Header>
 

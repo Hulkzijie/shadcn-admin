@@ -1,58 +1,47 @@
 import { Link, useSearch } from '@tanstack/react-router'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { AuthLayout } from '../auth-layout'
+import { AuthSplitLayout } from '../auth-split-layout'
 import { UserAuthForm } from './components/user-auth-form'
 
 export function SignIn() {
   const { redirect } = useSearch({ from: '/(auth)/sign-in' })
 
   return (
-    <AuthLayout>
-      <Card className='max-w-sm gap-4'>
-        <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Sign in</CardTitle>
-          <CardDescription>
-            Enter your email and password below to log into{' '}
-            <br className='max-sm:hidden' /> your account. Don't have an
-            account?{' '}
-            <Link
-              to='/sign-up'
-              className='text-nowrap underline underline-offset-4 hover:text-primary'
-            >
-              Sign Up
-            </Link>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UserAuthForm redirectTo={redirect} />
-        </CardContent>
-        <CardFooter>
-          <p className='px-8 text-center text-sm text-muted-foreground'>
-            By clicking sign in, you agree to our{' '}
-            <a
-              href='/terms'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href='/privacy'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </CardFooter>
-      </Card>
-    </AuthLayout>
+    <AuthSplitLayout
+      headline='与 AI Agent 一起'
+      highlight='重塑你的工作方式'
+      description='一个平台连接你的模型、知识与工具，让智能体替你完成从问答到自动执行的每一步。'
+    >
+      <div className='mb-6 space-y-1.5 text-center lg:text-start'>
+        <h2 className='text-2xl font-semibold tracking-tight'>欢迎回来</h2>
+        <p className='text-sm text-muted-foreground'>
+          还没有账户？{' '}
+          <Link
+            to='/sign-up'
+            className='font-medium text-foreground underline underline-offset-4'
+          >
+            立即注册
+          </Link>
+        </p>
+      </div>
+
+      <UserAuthForm redirectTo={redirect} />
+
+      <p className='mt-6 text-center text-xs text-muted-foreground'>
+        登录即表示你同意我们的{' '}
+        <a
+          href='/terms'
+          className='underline underline-offset-4 hover:text-foreground'
+        >
+          服务条款
+        </a>{' '}
+        与{' '}
+        <a
+          href='/privacy'
+          className='underline underline-offset-4 hover:text-foreground'
+        >
+          隐私政策
+        </a>
+      </p>
+    </AuthSplitLayout>
   )
 }

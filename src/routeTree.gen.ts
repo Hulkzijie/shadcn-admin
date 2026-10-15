@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
+import { Route as AuthenticatedBareRouteRouteImport } from './routes/_authenticated-bare/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
@@ -34,6 +35,7 @@ import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedAppPlazaIndexRouteImport } from './routes/_authenticated/app-plaza/index'
 import { Route as AuthenticatedAiChatIndexRouteImport } from './routes/_authenticated/ai-chat/index'
+import { Route as AuthenticatedBareAgentIndexRouteImport } from './routes/_authenticated-bare/agent/index'
 import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
 import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
 import { Route as ClerkauthSignInRouteImport } from './routes/clerk/(auth)/sign-in'
@@ -46,6 +48,10 @@ import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenti
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
   path: '/clerk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBareRouteRoute = AuthenticatedBareRouteRouteImport.update({
+  id: '/_authenticated-bare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -171,6 +177,12 @@ const AuthenticatedAiChatIndexRoute =
     path: '/ai-chat/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBareAgentIndexRoute =
+  AuthenticatedBareAgentIndexRouteImport.update({
+    id: '/agent/',
+    path: '/agent/',
+    getParentRoute: () => AuthenticatedBareRouteRoute,
+  } as any)
 const ClerkAuthenticatedUserManagementRoute =
   ClerkAuthenticatedUserManagementRouteImport.update({
     id: '/user-management',
@@ -240,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
+  '/agent/': typeof AuthenticatedBareAgentIndexRoute
   '/ai-chat/': typeof AuthenticatedAiChatIndexRoute
   '/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
@@ -251,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/users/': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedIndexRoute
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -262,7 +276,6 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/': typeof AuthenticatedIndexRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -271,6 +284,7 @@ export interface FileRoutesByTo {
   '/clerk/sign-in': typeof ClerkauthSignInRoute
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
+  '/agent': typeof AuthenticatedBareAgentIndexRoute
   '/ai-chat': typeof AuthenticatedAiChatIndexRoute
   '/app-plaza': typeof AuthenticatedAppPlazaIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
@@ -284,6 +298,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated-bare': typeof AuthenticatedBareRouteRouteWithChildren
   '/clerk': typeof ClerkRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
@@ -307,6 +322,7 @@ export interface FileRoutesById {
   '/clerk/(auth)/sign-in': typeof ClerkauthSignInRoute
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
+  '/_authenticated-bare/agent/': typeof AuthenticatedBareAgentIndexRoute
   '/_authenticated/ai-chat/': typeof AuthenticatedAiChatIndexRoute
   '/_authenticated/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
@@ -341,6 +357,7 @@ export interface FileRouteTypes {
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
+    | '/agent/'
     | '/ai-chat/'
     | '/app-plaza/'
     | '/apps/'
@@ -352,6 +369,7 @@ export interface FileRouteTypes {
     | '/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/clerk'
     | '/forgot-password'
     | '/otp'
@@ -363,7 +381,6 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/'
     | '/errors/$error'
     | '/settings/account'
     | '/settings/appearance'
@@ -372,6 +389,7 @@ export interface FileRouteTypes {
     | '/clerk/sign-in'
     | '/clerk/sign-up'
     | '/clerk/user-management'
+    | '/agent'
     | '/ai-chat'
     | '/app-plaza'
     | '/apps'
@@ -384,6 +402,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/_authenticated-bare'
     | '/clerk'
     | '/_authenticated/settings'
     | '/clerk/(auth)'
@@ -407,6 +426,7 @@ export interface FileRouteTypes {
     | '/clerk/(auth)/sign-in'
     | '/clerk/(auth)/sign-up'
     | '/clerk/_authenticated/user-management'
+    | '/_authenticated-bare/agent/'
     | '/_authenticated/ai-chat/'
     | '/_authenticated/app-plaza/'
     | '/_authenticated/apps/'
@@ -420,6 +440,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthenticatedBareRouteRoute: typeof AuthenticatedBareRouteRouteWithChildren
   ClerkRouteRoute: typeof ClerkRouteRouteWithChildren
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOtpRoute: typeof authOtpRoute
@@ -440,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/clerk'
       fullPath: '/clerk'
       preLoaderRoute: typeof ClerkRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated-bare': {
+      id: '/_authenticated-bare'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedBareRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -610,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAiChatIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated-bare/agent/': {
+      id: '/_authenticated-bare/agent/'
+      path: '/agent'
+      fullPath: '/agent/'
+      preLoaderRoute: typeof AuthenticatedBareAgentIndexRouteImport
+      parentRoute: typeof AuthenticatedBareRouteRoute
+    }
     '/clerk/_authenticated/user-management': {
       id: '/clerk/_authenticated/user-management'
       path: '/user-management'
@@ -723,6 +758,20 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthenticatedBareRouteRouteChildren {
+  AuthenticatedBareAgentIndexRoute: typeof AuthenticatedBareAgentIndexRoute
+}
+
+const AuthenticatedBareRouteRouteChildren: AuthenticatedBareRouteRouteChildren =
+  {
+    AuthenticatedBareAgentIndexRoute: AuthenticatedBareAgentIndexRoute,
+  }
+
+const AuthenticatedBareRouteRouteWithChildren =
+  AuthenticatedBareRouteRoute._addFileChildren(
+    AuthenticatedBareRouteRouteChildren,
+  )
+
 interface ClerkauthRouteRouteChildren {
   ClerkauthSignInRoute: typeof ClerkauthSignInRoute
   ClerkauthSignUpRoute: typeof ClerkauthSignUpRoute
@@ -768,6 +817,7 @@ const ClerkRouteRouteWithChildren = ClerkRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthenticatedBareRouteRoute: AuthenticatedBareRouteRouteWithChildren,
   ClerkRouteRoute: ClerkRouteRouteWithChildren,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOtpRoute: authOtpRoute,

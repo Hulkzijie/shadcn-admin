@@ -85,3 +85,14 @@
     height: 0;
   }
 }
+
+/* AI 登录页背景光晕浮动 */
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(20px, -24px, 0) scale(1.08);
+  }
+}

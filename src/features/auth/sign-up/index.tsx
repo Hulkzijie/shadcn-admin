@@ -1,57 +1,45 @@
 import { Link } from '@tanstack/react-router'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { AuthLayout } from '../auth-layout'
+import { AuthSplitLayout } from '../auth-split-layout'
 import { SignUpForm } from './components/sign-up-form'
 
 export function SignUp() {
   return (
-    <AuthLayout>
-      <Card className='max-w-sm gap-4'>
-        <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>
-            Create an account
-          </CardTitle>
-          <CardDescription>
-            Enter your email and password to create an account. <br />
-            Already have an account?{' '}
-            <Link
-              to='/sign-in'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Sign In
-            </Link>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SignUpForm />
-        </CardContent>
-        <CardFooter>
-          <p className='px-8 text-center text-sm text-muted-foreground'>
-            By creating an account, you agree to our{' '}
-            <a
-              href='/terms'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a
-              href='/privacy'
-              className='underline underline-offset-4 hover:text-primary'
-            >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </CardFooter>
-      </Card>
-    </AuthLayout>
+    <AuthSplitLayout
+      headline='创建你的账户'
+      highlight='开启智能体之旅'
+      description='注册 WiseCloud AI，连接你的模型、知识与工具，让 AI Agent 为你工作。'
+    >
+      <div className='mb-6 space-y-1.5 text-center lg:text-start'>
+        <h2 className='text-2xl font-semibold tracking-tight'>创建账户</h2>
+        <p className='text-sm text-muted-foreground'>
+          已有账户？{' '}
+          <Link
+            to='/sign-in'
+            className='font-medium text-foreground underline underline-offset-4'
+          >
+            立即登录
+          </Link>
+        </p>
+      </div>
+
+      <SignUpForm />
+
+      <p className='mt-6 text-center text-xs text-muted-foreground'>
+        注册即表示你同意我们的{' '}
+        <a
+          href='/terms'
+          className='underline underline-offset-4 hover:text-foreground'
+        >
+          服务条款
+        </a>{' '}
+        与{' '}
+        <a
+          href='/privacy'
+          className='underline underline-offset-4 hover:text-foreground'
+        >
+          隐私政策
+        </a>
+      </p>
+    </AuthSplitLayout>
   )
 }

@@ -1,6 +1,11 @@
 import { type SVGProps } from 'react'
 import { cn } from '@/lib/utils'
 
+/**
+ * WiseCloud 品牌标识：
+ * 云朵轮廓（Cloud）内嵌一枚实心四角火花（Wise / AI 智慧），
+ * 采用 currentColor 描边与填充，可自适应深浅色背景。
+ */
 export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -11,14 +16,21 @@ export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
       width='24'
       fill='none'
       stroke='currentColor'
-      strokeWidth='2'
+      strokeWidth='1.8'
       strokeLinecap='round'
       strokeLinejoin='round'
       className={cn('size-6', className)}
       {...props}
     >
       <title>WiseCloud</title>
-      <path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3' />
+      {/* 云朵外形 */}
+      <path d='M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z' />
+      {/* 云中智慧火花 */}
+      <path
+        d='M12 11.1Q12 13.8 14.7 13.8Q12 13.8 12 16.5Q12 13.8 9.3 13.8Q12 13.8 12 11.1Z'
+        fill='currentColor'
+        stroke='none'
+      />
     </svg>
   )
 }
