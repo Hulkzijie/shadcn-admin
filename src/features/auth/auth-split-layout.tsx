@@ -35,12 +35,12 @@ export function AuthSplitLayout({
   return (
     <div className='grid min-h-svh w-full lg:grid-cols-2'>
       {/* 左侧品牌 & 产品叙事 */}
-      <div className='relative hidden overflow-hidden bg-[#111113] lg:flex lg:flex-col lg:justify-between lg:border-r lg:border-white/[0.07] lg:p-12'>
+      <div className='relative hidden overflow-hidden bg-[oklch(0.165_0.028_265)] lg:flex lg:flex-col lg:justify-between lg:p-12'>
         {/* 背景：柔和径向高光 + 极淡网格 */}
         <div aria-hidden className='pointer-events-none absolute inset-0'>
           <div className='absolute inset-x-0 top-0 h-105 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(110,86,207,0.20),transparent_70%)]' />
-          <div className='absolute -top-24 -left-16 size-128 animate-[float_18s_ease-in-out_infinite] rounded-full bg-[#6e56cf]/10 blur-[140px]' />
-          <div className='absolute -right-24 bottom-0 size-112 animate-[float_20s_ease-in-out_infinite_2s] rounded-full bg-[#0091ff]/10 blur-[140px]' />
+          <div className='absolute -top-24 -left-16 size-128 animate-[float_18s_ease-in-out_infinite] rounded-full bg-[#6e56cf]/10 blur-[140px] motion-reduce:animate-none' />
+          <div className='absolute -right-24 bottom-0 size-112 animate-[float_20s_ease-in-out_infinite_2s] rounded-full bg-[#0091ff]/10 blur-[140px] motion-reduce:animate-none' />
           <div className='absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] bg-size-[56px_56px]' />
         </div>
 
@@ -54,13 +54,13 @@ export function AuthSplitLayout({
         <div className='relative z-10 max-w-md space-y-6'>
           <div className='inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs text-[#b0b4ba] backdrop-blur'>
             <span className='relative flex size-1.5'>
-              <span className='absolute inline-flex size-full animate-ping rounded-full bg-[#30a46c] opacity-75' />
+              <span className='absolute inline-flex size-full animate-ping rounded-full bg-[#30a46c] opacity-75 motion-reduce:animate-none' />
               <span className='relative inline-flex size-1.5 rounded-full bg-[#30a46c]' />
             </span>
             AI Agent 已就绪
           </div>
 
-          <h1 className='text-4xl leading-tight font-semibold tracking-tight text-[#eeeeef]'>
+          <h1 className='text-4xl leading-tight font-semibold tracking-tight text-balance text-[#eeeeef]'>
             {headline}
             <br />
             <span className='bg-linear-to-r from-[#a48fff] to-[#6e56cf] bg-clip-text text-transparent'>
@@ -68,7 +68,9 @@ export function AuthSplitLayout({
             </span>
           </h1>
 
-          <p className='text-sm leading-relaxed text-[#b0b4ba]'>{description}</p>
+          <p className='text-sm leading-relaxed text-[#b0b4ba]'>
+            {description}
+          </p>
 
           <ul className='space-y-4 pt-2'>
             {features.map((item) => (

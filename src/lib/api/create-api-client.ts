@@ -61,6 +61,9 @@ export function createApiClient({
       const { headers: encryptHeaders, data } = encryptRequest(
         requestConfig.data
       )
+      // 加密后请求体是字符串，axios 对 POST/PUT 会默认补 x-www-form-urlencoded，
+      // 这里显式声明 JSON，避免后端报 Content-Type 不支持
+      headers.set('Content-Type', 'application/json;charset=utf-8')
       Object.assign(requestConfig.headers, encryptHeaders)
       requestConfig.data = data
     }

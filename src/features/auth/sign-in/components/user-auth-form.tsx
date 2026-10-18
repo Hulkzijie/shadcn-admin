@@ -161,7 +161,11 @@ export function UserAuthForm({
                 <FormItem>
                   <FormLabel>用户名</FormLabel>
                   <FormControl>
-                    <Input placeholder='请输入用户名' {...field} />
+                    <Input
+                      placeholder='请输入用户名'
+                      autoComplete='username'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +178,11 @@ export function UserAuthForm({
                 <FormItem className='relative'>
                   <FormLabel>密码</FormLabel>
                   <FormControl>
-                    <PasswordInput placeholder='请输入密码' {...field} />
+                    <PasswordInput
+                      placeholder='请输入密码'
+                      autoComplete='current-password'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                   <Link
@@ -206,14 +214,17 @@ export function UserAuthForm({
                         onClick={() => void refreshCaptcha()}
                         className='group relative h-9 w-28 shrink-0 overflow-hidden rounded-md border'
                         title='点击刷新验证码'
+                        aria-label='刷新验证码'
                       >
                         <img
                           src={`data:image/png;base64,${captcha.img}`}
                           alt='验证码'
+                          width={112}
+                          height={36}
                           className='h-full w-full object-cover'
                         />
                         <span className='absolute inset-0 hidden items-center justify-center bg-background/70 group-hover:flex'>
-                          <RefreshCw className='size-4' />
+                          <RefreshCw className='size-4' aria-hidden='true' />
                         </span>
                       </button>
                     </div>
@@ -238,7 +249,9 @@ export function UserAuthForm({
                   <FormLabel>手机号</FormLabel>
                   <FormControl>
                     <Input
+                      type='tel'
                       inputMode='numeric'
+                      autoComplete='tel'
                       placeholder='请输入手机号'
                       {...field}
                     />
@@ -257,7 +270,7 @@ export function UserAuthForm({
                     <FormControl>
                       <Input
                         placeholder='请输入验证码'
-                        autoComplete='off'
+                        autoComplete='one-time-code'
                         {...field}
                       />
                     </FormControl>

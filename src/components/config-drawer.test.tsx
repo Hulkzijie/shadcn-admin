@@ -9,6 +9,27 @@ import { ThemeProvider } from '@/context/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { ConfigDrawer } from './config-drawer'
 
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-router')>()
+  return {
+    ...actual,
+    Link: ({
+      children,
+      to,
+      className,
+      ...rest
+    }: {
+      children?: React.ReactNode
+      to: string
+      className?: string
+    }) => (
+      <a href={to} className={className} {...rest}>
+        {children}
+      </a>
+    ),
+  }
+})
+
 async function renderConfigDrawer({
   sidebarDefaultOpen = true,
 }: {

@@ -1,6 +1,7 @@
 import { type SVGProps } from 'react'
 import { Root as Radio, Item } from '@radix-ui/react-radio-group'
-import { CircleCheck, RotateCcw, Settings } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { Bot, CircleCheck, RotateCcw, Settings } from 'lucide-react'
 import { IconDir } from '@/assets/custom/icon-dir'
 import { IconLayoutCompact } from '@/assets/custom/icon-layout-compact'
 import { IconLayoutDefault } from '@/assets/custom/icon-layout-default'
@@ -41,41 +42,55 @@ export function ConfigDrawer() {
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          size='icon'
-          variant='ghost'
-          aria-label='Open theme settings'
-          className='rounded-full'
-        >
-          <Settings aria-hidden='true' />
-        </Button>
-      </SheetTrigger>
-      <SheetContent className='flex flex-col'>
-        <SheetHeader className='pb-0 text-start'>
-          <SheetTitle>Theme Settings</SheetTitle>
-          <SheetDescription>
-            Adjust the appearance and layout to suit your preferences.
-          </SheetDescription>
-        </SheetHeader>
-        <div className='space-y-6 overflow-y-auto px-4'>
-          <ThemeConfig />
-          <SidebarConfig />
-          <LayoutConfig />
-          <DirConfig />
-        </div>
-        <SheetFooter className='gap-2'>
+    <>
+      <Sheet>
+        <SheetTrigger asChild>
           <Button
-            variant='destructive'
-            onClick={handleReset}
-            aria-label='Reset all settings to default values'
+            size='icon'
+            variant='ghost'
+            aria-label='Open theme settings'
+            className='rounded-full'
           >
-            Reset
+            <Settings aria-hidden='true' />
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </SheetTrigger>
+        <SheetContent className='flex flex-col'>
+          <SheetHeader className='pb-0 text-start'>
+            <SheetTitle>Theme Settings</SheetTitle>
+            <SheetDescription>
+              Adjust the appearance and layout to suit your preferences.
+            </SheetDescription>
+          </SheetHeader>
+          <div className='space-y-6 overflow-y-auto px-4'>
+            <ThemeConfig />
+            <SidebarConfig />
+            <LayoutConfig />
+            <DirConfig />
+          </div>
+          <SheetFooter className='gap-2'>
+            <Button
+              variant='destructive'
+              onClick={handleReset}
+              aria-label='Reset all settings to default values'
+            >
+              Reset
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+      {/* Agent 入口与 Theme Settings 同组件，保证每个页面的头部都能看到 */}
+      <Button
+        asChild
+        size='icon'
+        variant='ghost'
+        aria-label='Open AI agent'
+        className='rounded-full'
+      >
+        <Link to='/agent'>
+          <Bot aria-hidden='true' />
+        </Link>
+      </Button>
+    </>
   )
 }
 

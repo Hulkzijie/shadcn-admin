@@ -18,12 +18,19 @@ import {
   Users,
   MessagesSquare,
   Bot,
+  MessageCircleQuestion,
   Library,
   Store,
   ShieldCheck,
+  ShieldUser,
+  Building2,
+  BookMarked,
+  ListTree,
+  Network,
   AudioWaveform,
   Command,
   GalleryVerticalEnd,
+  Workflow,
 } from 'lucide-react'
 import { ClerkLogo } from '@/assets/clerk-logo'
 import { type SidebarData } from '../types'
@@ -82,6 +89,16 @@ export const sidebarData: SidebarData = {
           icon: Bot,
         },
         {
+          title: '智能体',
+          url: '/agents',
+          icon: Workflow,
+        },
+        {
+          title: '智能问答',
+          url: '/qa',
+          icon: MessageCircleQuestion,
+        },
+        {
           title: '知识库',
           url: '/knowledge-base',
           icon: Library,
@@ -113,6 +130,41 @@ export const sidebarData: SidebarData = {
               url: '/clerk/user-management',
             },
           ],
+        },
+      ],
+    },
+    {
+      title: '系统管理',
+      items: [
+        {
+          title: '用户',
+          url: '/system/users',
+          icon: Users,
+        },
+        {
+          title: '角色',
+          url: '/system/roles',
+          icon: ShieldUser,
+        },
+        {
+          title: '菜单',
+          url: '/system/menus',
+          icon: ListTree,
+        },
+        {
+          title: '部门',
+          url: '/system/depts',
+          icon: Network,
+        },
+        {
+          title: '字典',
+          url: '/system/dict/type',
+          icon: BookMarked,
+        },
+        {
+          title: '租户',
+          url: '/system/tenants',
+          icon: Building2,
         },
       ],
     },
