@@ -6,7 +6,7 @@
 
 ## 当前状态分析（Current State）
 
-- 侧边栏菜单定义在 [sidebar-data.ts](file:///Users/wangzijie/Documents/wx/shadcn-admin/src/components/layout/data/sidebar-data.ts) 的 `navGroups` 中，「General」分组在第 52-100 行，包含 Dashboard、Tasks、Apps、Chats、Users 等菜单项。
+- 侧边栏菜单定义在 [sidebar-data.ts](file:///Users/wangzijie/Documents/wx/wisecloud-admin/src/components/layout/data/sidebar-data.ts) 的 `navGroups` 中，「General」分组在第 52-100 行，包含 Dashboard、Tasks、Apps、Chats、Users 等菜单项。
 - 路由采用 TanStack Router 文件式路由（`@tanstack/router-plugin` 自动生成 `routeTree.gen.ts`，无需手动改）。受保护路由位于 `src/routes/_authenticated/` 下，每个路由对应一个 `src/features/<name>/` 功能模块。
 - 现有 Chats 页（`src/features/chats/index.tsx`）提供左右分栏的聊天 UI 参考：`Header` + `Main fixed` 布局、左栏会话列表、右栏消息气泡 + 输入框。
 - 页面通用骨架模式（参考 `src/features/tasks/index.tsx`）：`Header`（Search + ThemeSwitch + ConfigDrawer + ProfileDropdown）+ `Main`。
