@@ -20,6 +20,20 @@ interface ImportMetaEnv {
   readonly VITE_APP_CLIENT_ID?: string
   /** 默认租户 ID */
   readonly VITE_APP_TENANT_ID?: string
+
+  // ===== GIS =====
+  /** 完整底图样式地址（style.json），优先级最高；配置后忽略下面的瓦片模板 */
+  readonly VITE_MAP_STYLE_URL?: string
+  /** 底图瓦片模板，需含 {z}/{x}/{y}，例如 /map/{z}/{x}/{y}.png */
+  readonly VITE_MAP_TILE_URL?: string
+  /** 注记（文字标注）瓦片模板，可选；留空则只有无标注底图 */
+  readonly VITE_MAP_LABEL_TILE_URL?: string
+  /** 底图最大原生层级，超出后自动拉伸，默认 18 */
+  readonly VITE_MAP_TILE_MAX_ZOOM?: string
+  /** 底图版权信息，默认 © 天地图 */
+  readonly VITE_MAP_TILE_ATTRIBUTION?: string
+  /** 坐标系：WGS84 | GCJ02 | CGCS2000（必须与后端数据一致） */
+  readonly VITE_GIS_CRS?: string
 }
 
 interface ImportMeta {

@@ -32,6 +32,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa/index'
 import { Route as AuthenticatedKnowledgeBaseIndexRouteImport } from './routes/_authenticated/knowledge-base/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedGisIndexRouteImport } from './routes/_authenticated/gis/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedAppPlazaIndexRouteImport } from './routes/_authenticated/app-plaza/index'
@@ -171,6 +172,11 @@ const AuthenticatedHelpCenterIndexRoute =
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedGisIndexRoute = AuthenticatedGisIndexRouteImport.update({
+  id: '/gis/',
+  path: '/gis/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
   path: '/chats/',
@@ -335,6 +341,7 @@ export interface FileRoutesByFullPath {
   '/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
+  '/gis/': typeof AuthenticatedGisIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/knowledge-base/': typeof AuthenticatedKnowledgeBaseIndexRoute
   '/qa/': typeof AuthenticatedQaIndexRoute
@@ -378,6 +385,7 @@ export interface FileRoutesByTo {
   '/app-plaza': typeof AuthenticatedAppPlazaIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/gis': typeof AuthenticatedGisIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/knowledge-base': typeof AuthenticatedKnowledgeBaseIndexRoute
   '/qa': typeof AuthenticatedQaIndexRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/gis/': typeof AuthenticatedGisIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/knowledge-base/': typeof AuthenticatedKnowledgeBaseIndexRoute
   '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
@@ -473,6 +482,7 @@ export interface FileRouteTypes {
     | '/app-plaza/'
     | '/apps/'
     | '/chats/'
+    | '/gis/'
     | '/help-center/'
     | '/knowledge-base/'
     | '/qa/'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/app-plaza'
     | '/apps'
     | '/chats'
+    | '/gis'
     | '/help-center'
     | '/knowledge-base'
     | '/qa'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app-plaza/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
+    | '/_authenticated/gis/'
     | '/_authenticated/help-center/'
     | '/_authenticated/knowledge-base/'
     | '/_authenticated/qa/'
@@ -757,6 +769,13 @@ declare module '@tanstack/react-router' {
       path: '/help-center'
       fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/gis/': {
+      id: '/_authenticated/gis/'
+      path: '/gis'
+      fullPath: '/gis/'
+      preLoaderRoute: typeof AuthenticatedGisIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/chats/': {
@@ -955,6 +974,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppPlazaIndexRoute: typeof AuthenticatedAppPlazaIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedGisIndexRoute: typeof AuthenticatedGisIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedKnowledgeBaseIndexRoute: typeof AuthenticatedKnowledgeBaseIndexRoute
   AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
@@ -978,6 +998,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppPlazaIndexRoute: AuthenticatedAppPlazaIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedGisIndexRoute: AuthenticatedGisIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedKnowledgeBaseIndexRoute: AuthenticatedKnowledgeBaseIndexRoute,
   AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,

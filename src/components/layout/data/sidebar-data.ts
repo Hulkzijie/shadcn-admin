@@ -1,6 +1,7 @@
 import {
   Construction,
   LayoutDashboard,
+  Map as MapIcon,
   Monitor,
   Bug,
   ListTodo,
@@ -66,6 +67,11 @@ export const sidebarData: SidebarData = {
           title: '仪表盘',
           url: '/',
           icon: LayoutDashboard,
+        },
+        {
+          title: 'GIS 地图',
+          url: '/gis',
+          icon: MapIcon,
         },
         {
           title: '任务',
