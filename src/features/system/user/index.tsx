@@ -1,5 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -12,11 +13,16 @@ import { UserPrimaryButtons } from './components/user-primary-buttons'
 import { UserProvider } from './components/user-provider'
 import { UserTable } from './components/user-table'
 
-const route = getRouteApi('/_authenticated/system/users/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  userName: z.string().optional().catch(''),
+  status: z.array(z.string()).optional().catch([]),
+})
 
 export function UserList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysUserQuery = {
     pageNum: search.page ?? 1,

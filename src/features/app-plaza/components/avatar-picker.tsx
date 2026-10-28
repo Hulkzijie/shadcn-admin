@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { ImagePlus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 /** 预设渐变头像配色 */
 const avatarPresets = [

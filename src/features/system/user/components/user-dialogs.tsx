@@ -1,7 +1,7 @@
 import { UserDeleteDialog } from './user-delete-dialog'
 import { UserMutateDialog } from './user-mutate-dialog'
-import { UserResetPwdDialog } from './user-reset-pwd-dialog'
 import { useUser } from './user-provider'
+import { UserResetPwdDialog } from './user-reset-pwd-dialog'
 
 export function UserDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useUser()

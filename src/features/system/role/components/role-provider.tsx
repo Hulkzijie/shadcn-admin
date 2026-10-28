@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import useDialogState from '@/hooks/use-dialog-state'
 import { type SysRoleVo } from '../api'
 
-export type RoleDialogType = 'add' | 'edit' | 'delete'
+export type RoleDialogType = 'add' | 'edit' | 'auth' | 'delete'
 
 type RoleContextType = {
   open: RoleDialogType | null

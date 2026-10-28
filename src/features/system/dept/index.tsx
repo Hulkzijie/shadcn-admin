@@ -1,5 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -12,11 +13,14 @@ import { DeptPrimaryButtons } from './components/dept-primary-buttons'
 import { DeptProvider } from './components/dept-provider'
 import { DeptTable } from './components/dept-table'
 
-const route = getRouteApi('/_authenticated/system/depts/')
+const searchSchema = z.object({
+  deptName: z.string().optional().catch(''),
+  status: z.array(z.string()).optional().catch([]),
+})
 
 export function DeptList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysDeptQuery = {
     deptName: search.deptName || undefined,

@@ -25,10 +25,10 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/password-input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { SelectDropdown } from '@/components/select-dropdown'
 import { Textarea } from '@/components/ui/textarea'
+import { PasswordInput } from '@/components/password-input'
+import { SelectDropdown } from '@/components/select-dropdown'
 import { flattenTree } from '../../shared/api'
 import {
   addUser,
@@ -104,6 +104,12 @@ export function UserMutateDialog({
     staleTime: 5 * 60 * 1000,
   })
 
+  // 后端会把 Long 序列化成字符串，这里统一转成 number，避免角色校验失败
+  const roles = (roleList ?? []).map((role) => ({
+    ...role,
+    roleId: Number(role.roleId),
+  }))
+
   const { data: detail } = useQuery({
     queryKey: ['system-user-detail', currentRow?.userId],
     queryFn: () => getUserInfo(currentRow!.userId),
@@ -124,7 +130,7 @@ export function UserMutateDialog({
         sex: detail.user?.sex ?? '2',
         status: detail.user?.status ?? '0',
         password: '',
-        roleIds: detail.roleIds ?? [],
+        roleIds: (detail.roleIds ?? []).map(Number),
         remark: detail.user?.remark ?? '',
       })
     }
@@ -196,8 +202,10 @@ export function UserMutateDialog({
                 control={form.control}
                 name='userName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>用户名</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      用户名
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='请输入用户名'
@@ -215,7 +223,7 @@ export function UserMutateDialog({
                 control={form.control}
                 name='nickName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>昵称</FormLabel>
                     <FormControl>
                       <Input
@@ -233,7 +241,7 @@ export function UserMutateDialog({
                 control={form.control}
                 name='deptId'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>部门</FormLabel>
                     <SelectDropdown
                       isControlled
@@ -254,8 +262,10 @@ export function UserMutateDialog({
                 control={form.control}
                 name='phonenumber'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>手机号</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      手机号
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='请输入手机号'
@@ -271,7 +281,7 @@ export function UserMutateDialog({
                 control={form.control}
                 name='email'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>邮箱</FormLabel>
                     <FormControl>
                       <Input
@@ -288,7 +298,7 @@ export function UserMutateDialog({
                 control={form.control}
                 name='sex'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>性别</FormLabel>
                     <SelectDropdown
                       isControlled
@@ -309,7 +319,7 @@ export function UserMutateDialog({
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>状态</FormLabel>
                     <SelectDropdown
                       isControlled
@@ -330,8 +340,10 @@ export function UserMutateDialog({
                   control={form.control}
                   name='password'
                   render={({ field }) => (
-                    <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                      <FormLabel className='col-span-2 text-end'>密码</FormLabel>
+                    <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                      <FormLabel className='col-span-2 text-end'>
+                        密码
+                      </FormLabel>
                       <FormControl>
                         <PasswordInput
                           placeholder='请输入密码'
@@ -348,14 +360,14 @@ export function UserMutateDialog({
                 control={form.control}
                 name='roleIds'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 pt-2 text-end'>
                       角色
                     </FormLabel>
                     <div className='col-span-4 rounded-md border'>
                       <ScrollArea className='h-32 p-2'>
                         <div className='space-y-2'>
-                          {(roleList ?? []).map((role) => {
+                          {roles.map((role) => {
                             const checked = field.value.includes(role.roleId)
                             return (
                               <label
@@ -389,8 +401,10 @@ export function UserMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 pt-2 text-end'>备注</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 pt-2 text-end'>
+                      备注
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder='请输入备注'

@@ -24,8 +24,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { SelectDropdown } from '@/components/select-dropdown'
 import { Textarea } from '@/components/ui/textarea'
+import { SelectDropdown } from '@/components/select-dropdown'
 import { flattenTree } from '../../shared/api'
 import {
   addMenu,
@@ -188,7 +188,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='parentId'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       上级菜单
                     </FormLabel>
@@ -208,7 +208,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='menuName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       菜单名称
                     </FormLabel>
@@ -228,7 +228,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='orderNum'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       显示排序
                     </FormLabel>
@@ -239,9 +239,7 @@ export function MenuMutateDialog({
                         className='col-span-4'
                         {...field}
                         value={Number.isNaN(field.value) ? '' : field.value}
-                        onChange={(e) =>
-                          field.onChange(e.target.valueAsNumber)
-                        }
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
                       />
                     </FormControl>
                     <FormMessage className='col-span-4 col-start-3' />
@@ -252,7 +250,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='menuType'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       菜单类型
                     </FormLabel>
@@ -276,8 +274,10 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='icon'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>菜单图标</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      菜单图标
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='请输入菜单图标'
@@ -293,7 +293,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='path'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       路由地址
                     </FormLabel>
@@ -312,7 +312,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='component'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       组件路径
                     </FormLabel>
@@ -331,7 +331,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='perms'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       权限标识
                     </FormLabel>
@@ -350,7 +350,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='visible'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       显示状态
                     </FormLabel>
@@ -372,7 +372,7 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       菜单状态
                     </FormLabel>
@@ -394,8 +394,10 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='isFrame'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>是否外链</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      是否外链
+                    </FormLabel>
                     <SelectDropdown
                       isControlled
                       defaultValue={field.value}
@@ -414,8 +416,10 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='isCache'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>是否缓存</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      是否缓存
+                    </FormLabel>
                     <SelectDropdown
                       isControlled
                       defaultValue={field.value}
@@ -434,8 +438,10 @@ export function MenuMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 pt-2 text-end'>备注</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 pt-2 text-end'>
+                      备注
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder='请输入备注'

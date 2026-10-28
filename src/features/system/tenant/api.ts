@@ -53,7 +53,11 @@ export interface SysTenantPackageVo {
 
 /** GET /system/tenant/list 分页查询租户 */
 export function listTenants(params: SysTenantQuery) {
-  return sysList<SysTenantVo>({ url: '/system/tenant/list', method: 'get', params })
+  return sysList<SysTenantVo>({
+    url: '/system/tenant/list',
+    method: 'get',
+    params,
+  })
 }
 
 /** GET /system/tenant/{id} 租户详情 */
@@ -63,7 +67,12 @@ export function getTenant(id: number) {
 
 /** POST /system/tenant 新增租户（后端 @ApiEncrypt，需加密请求体） */
 export function addTenant(data: SysTenantBo) {
-  return sysRequest<void>({ url: '/system/tenant', method: 'post', data, encrypt: true })
+  return sysRequest<void>({
+    url: '/system/tenant',
+    method: 'post',
+    data,
+    encrypt: true,
+  })
 }
 
 /** PUT /system/tenant 修改租户 */

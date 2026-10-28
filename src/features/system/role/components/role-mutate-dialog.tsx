@@ -24,8 +24,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { SelectDropdown } from '@/components/select-dropdown'
 import { Textarea } from '@/components/ui/textarea'
+import { SelectDropdown } from '@/components/select-dropdown'
 import { STATUS_OPTIONS } from '../../shared/constants'
 import {
   addRole,
@@ -144,7 +144,7 @@ export function RoleMutateDialog({
                 control={form.control}
                 name='roleName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       角色名称
                     </FormLabel>
@@ -164,7 +164,7 @@ export function RoleMutateDialog({
                 control={form.control}
                 name='roleKey'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       权限字符
                     </FormLabel>
@@ -184,7 +184,7 @@ export function RoleMutateDialog({
                 control={form.control}
                 name='roleSort'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       显示顺序
                     </FormLabel>
@@ -212,7 +212,7 @@ export function RoleMutateDialog({
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>状态</FormLabel>
                     <SelectDropdown
                       isControlled
@@ -229,8 +229,10 @@ export function RoleMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 pt-2 text-end'>备注</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 pt-2 text-end'>
+                      备注
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder='请输入备注'

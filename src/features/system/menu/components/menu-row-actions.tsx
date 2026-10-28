@@ -10,11 +10,11 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { type FlatMenu } from './menu-columns'
+import { type MenuRow } from './menu-columns'
 import { useMenu } from './menu-provider'
 
 type DataTableRowActionsProps = {
-  row: Row<FlatMenu>
+  row: Row<MenuRow>
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {

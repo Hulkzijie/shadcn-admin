@@ -1,5 +1,7 @@
+import { CornerDownRight, MousePointerClick, Timer, Users } from 'lucide-react'
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -7,122 +9,87 @@ import {
 } from '@/components/ui/card'
 import { AnalyticsChart } from './analytics-chart'
 
+const metrics = [
+  {
+    title: '总点击量',
+    value: '1,248',
+    change: '+12.4%',
+    hint: '较上周',
+    icon: MousePointerClick,
+  },
+  {
+    title: '独立访客',
+    value: '832',
+    change: '+5.8%',
+    hint: '较上周',
+    icon: Users,
+  },
+  {
+    title: '跳出率',
+    value: '42%',
+    change: '-3.2%',
+    hint: '较上周',
+    icon: CornerDownRight,
+  },
+  {
+    title: '平均停留时长',
+    value: '3 分 24 秒',
+    change: '+18 秒',
+    hint: '较上周',
+    icon: Timer,
+  },
+]
+
 export function Analytics() {
   return (
-    <div className='space-y-4'>
+    <div className='flex flex-col gap-4'>
       <Card>
         <CardHeader>
-          <CardTitle>Traffic Overview</CardTitle>
-          <CardDescription>Weekly clicks and unique visitors</CardDescription>
+          <CardTitle>流量概览</CardTitle>
+          <CardDescription>近 7 天点击量与独立访客趋势</CardDescription>
         </CardHeader>
         <CardContent className='px-6'>
           <AnalyticsChart />
         </CardContent>
       </Card>
       <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Clicks</CardTitle>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              className='h-4 w-4 text-muted-foreground'
-            >
-              <path d='M3 3v18h18' />
-              <path d='M7 15l4-4 4 4 4-6' />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>1,248</div>
-            <p className='text-xs text-muted-foreground'>+12.4% vs last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Unique Visitors
-            </CardTitle>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              className='h-4 w-4 text-muted-foreground'
-            >
-              <circle cx='12' cy='7' r='4' />
-              <path d='M6 21v-2a6 6 0 0 1 12 0v2' />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>832</div>
-            <p className='text-xs text-muted-foreground'>+5.8% vs last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Bounce Rate</CardTitle>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              className='h-4 w-4 text-muted-foreground'
-            >
-              <path d='M3 12h6l3 6 3-6h6' />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>42%</div>
-            <p className='text-xs text-muted-foreground'>-3.2% vs last week</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Avg. Session</CardTitle>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              className='h-4 w-4 text-muted-foreground'
-            >
-              <circle cx='12' cy='12' r='10' />
-              <path d='M12 6v6l4 2' />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>3m 24s</div>
-            <p className='text-xs text-muted-foreground'>+18s vs last week</p>
-          </CardContent>
-        </Card>
+        {metrics.map((metric) => (
+          <Card key={metric.title}>
+            <CardHeader>
+              <CardTitle className='text-sm font-medium'>
+                {metric.title}
+              </CardTitle>
+              <CardAction>
+                <div className='flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
+                  <metric.icon />
+                </div>
+              </CardAction>
+            </CardHeader>
+            <CardContent className='flex flex-col gap-1.5'>
+              <div className='text-2xl font-semibold tracking-tight tabular-nums'>
+                {metric.value}
+              </div>
+              <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                <span className='font-medium text-primary'>{metric.change}</span>
+                <span>{metric.hint}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
       <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
         <Card className='col-span-1 lg:col-span-4'>
           <CardHeader>
-            <CardTitle>Referrers</CardTitle>
-            <CardDescription>Top sources driving traffic</CardDescription>
+            <CardTitle>来源分布</CardTitle>
+            <CardDescription>带来访问的主要渠道</CardDescription>
           </CardHeader>
           <CardContent>
             <SimpleBarList
               items={[
-                { name: 'Direct', value: 512 },
-                { name: 'Product Hunt', value: 238 },
-                { name: 'Twitter', value: 174 },
-                { name: 'Blog', value: 104 },
+                { name: '直接访问', value: 512 },
+                { name: '产品公测页', value: 238 },
+                { name: '社交媒体', value: 174 },
+                { name: '技术博客', value: 104 },
               ]}
               barClass='bg-primary'
               valueFormatter={(n) => `${n}`}
@@ -131,15 +98,15 @@ export function Analytics() {
         </Card>
         <Card className='col-span-1 lg:col-span-3'>
           <CardHeader>
-            <CardTitle>Devices</CardTitle>
-            <CardDescription>How users access your app</CardDescription>
+            <CardTitle>终端分布</CardTitle>
+            <CardDescription>用户访问设备占比</CardDescription>
           </CardHeader>
           <CardContent>
             <SimpleBarList
               items={[
-                { name: 'Desktop', value: 74 },
-                { name: 'Mobile', value: 22 },
-                { name: 'Tablet', value: 4 },
+                { name: '桌面端', value: 74 },
+                { name: '移动端', value: 22 },
+                { name: '平板', value: 4 },
               ]}
               barClass='bg-muted-foreground'
               valueFormatter={(n) => `${n}%`}
@@ -162,7 +129,7 @@ function SimpleBarList({
 }) {
   const max = Math.max(...items.map((i) => i.value), 1)
   return (
-    <ul className='space-y-3'>
+    <ul className='flex flex-col gap-3'>
       {items.map((i) => {
         const width = `${Math.round((i.value / max) * 100)}%`
         return (

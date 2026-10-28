@@ -50,8 +50,8 @@ export function MenuDeleteDialog({
       }
       desc={
         <p>
-          确定要删除菜单 <span className='font-bold'>{currentRow.menuName}</span>{' '}
-          吗？
+          确定要删除菜单{' '}
+          <span className='font-bold'>{currentRow.menuName}</span> 吗？
           <br />
           该操作不可恢复。
         </p>

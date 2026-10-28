@@ -68,10 +68,7 @@ export function UserResetPwdDialog({
           />
         </div>
         <DialogFooter>
-          <Button
-            disabled={disabled || isPending}
-            onClick={() => mutate()}
-          >
+          <Button disabled={disabled || isPending} onClick={() => mutate()}>
             确定
           </Button>
         </DialogFooter>

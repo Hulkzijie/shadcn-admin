@@ -1,5 +1,6 @@
 import { RoleDeleteDialog } from './role-delete-dialog'
 import { RoleMutateDialog } from './role-mutate-dialog'
+import { RolePermissionDialog } from './role-permission-dialog'
 import { useRole } from './role-provider'
 
 export function RoleDialogs() {
@@ -19,6 +20,16 @@ export function RoleDialogs() {
             open={open === 'edit'}
             onOpenChange={(state) => {
               setOpen(state ? 'edit' : null)
+              if (!state) setTimeout(() => setCurrentRow(null), 500)
+            }}
+            currentRow={currentRow}
+          />
+
+          <RolePermissionDialog
+            key={`role-auth-${currentRow.roleId}`}
+            open={open === 'auth'}
+            onOpenChange={(state) => {
+              setOpen(state ? 'auth' : null)
               if (!state) setTimeout(() => setCurrentRow(null), 500)
             }}
             currentRow={currentRow}

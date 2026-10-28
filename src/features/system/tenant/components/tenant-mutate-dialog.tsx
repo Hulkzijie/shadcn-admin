@@ -24,9 +24,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { Textarea } from '@/components/ui/textarea'
 import { STATUS_OPTIONS } from '../../shared/constants'
 import {
   addTenant,
@@ -39,7 +39,10 @@ import {
 
 const makeSchema = (isEdit: boolean) =>
   z.object({
-    companyName: z.string().min(1, '请输入企业名称').max(100, '最多 100 个字符'),
+    companyName: z
+      .string()
+      .min(1, '请输入企业名称')
+      .max(100, '最多 100 个字符'),
     contactUserName: z.string().min(1, '请输入联系人'),
     contactPhone: z.string().min(1, '请输入联系电话'),
     username: z
@@ -210,7 +213,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='companyName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       企业名称
                     </FormLabel>
@@ -230,8 +233,10 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='contactUserName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>联系人</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      联系人
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='请输入联系人'
@@ -248,7 +253,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='contactPhone'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       联系电话
                     </FormLabel>
@@ -269,7 +274,7 @@ export function TenantMutateDialog({
                   control={form.control}
                   name='username'
                   render={({ field }) => (
-                    <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                    <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                       <FormLabel className='col-span-2 text-end'>
                         用户名
                       </FormLabel>
@@ -291,8 +296,10 @@ export function TenantMutateDialog({
                   control={form.control}
                   name='password'
                   render={({ field }) => (
-                    <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                      <FormLabel className='col-span-2 text-end'>密码</FormLabel>
+                    <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                      <FormLabel className='col-span-2 text-end'>
+                        密码
+                      </FormLabel>
                       <FormControl>
                         <PasswordInput
                           placeholder='请输入密码'
@@ -310,7 +317,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='packageId'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       租户套餐
                     </FormLabel>
@@ -333,7 +340,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='accountCount'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       用户数量
                     </FormLabel>
@@ -361,7 +368,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='expireTime'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       过期时间
                     </FormLabel>
@@ -380,7 +387,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>状态</FormLabel>
                     <SelectDropdown
                       isControlled
@@ -397,7 +404,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='licenseNumber'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       信用代码
                     </FormLabel>
@@ -417,7 +424,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='address'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>地址</FormLabel>
                     <FormControl>
                       <Input
@@ -435,7 +442,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='domain'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>域名</FormLabel>
                     <FormControl>
                       <Input
@@ -453,7 +460,7 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='intro'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 pt-2 text-end'>
                       企业简介
                     </FormLabel>
@@ -473,8 +480,10 @@ export function TenantMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 pt-2 text-end'>备注</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 pt-2 text-end'>
+                      备注
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder='请输入备注'

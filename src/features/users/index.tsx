@@ -1,4 +1,5 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -9,13 +10,35 @@ import { UsersDialogs } from './components/users-dialogs'
 import { UsersPrimaryButtons } from './components/users-primary-buttons'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
+import { roles } from './data/data'
 import { users } from './data/users'
 
-const route = getRouteApi('/_authenticated/users/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  // Facet filters
+  status: z
+    .array(
+      z.union([
+        z.literal('active'),
+        z.literal('inactive'),
+        z.literal('invited'),
+        z.literal('suspended'),
+      ])
+    )
+    .optional()
+    .catch([]),
+  role: z
+    .array(z.enum(roles.map((r) => r.value as (typeof roles)[number]['value'])))
+    .optional()
+    .catch([]),
+  // Per-column text filter (example for username)
+  username: z.string().optional().catch(''),
+})
 
 export function Users() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   return (
     <UsersProvider>

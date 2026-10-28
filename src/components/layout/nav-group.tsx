@@ -38,10 +38,10 @@ export function NavGroup({ title, items }: NavGroupProps) {
   const href = useLocation({ select: (location) => location.href })
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      {title && <SidebarGroupLabel>{title}</SidebarGroupLabel>}
       <SidebarMenu>
         {items.map((item) => {
-          const key = `${item.title}-${item.url}`
+          const key = `${item.title}-${item.url ?? ''}`
 
           if (!item.items)
             return <SidebarMenuLink key={key} item={item} href={href} />
@@ -88,7 +88,6 @@ function SidebarMenuCollapsible({
   item: NavCollapsible
   href: string
 }) {
-  const { setOpenMobile } = useSidebar()
   return (
     <Collapsible
       asChild
@@ -105,25 +104,72 @@ function SidebarMenuCollapsible({
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent className='CollapsibleContent'>
-          <SidebarMenuSub>
-            {item.items.map((subItem) => (
-              <SidebarMenuSubItem key={subItem.title}>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={checkIsActive(href, subItem)}
-                >
-                  <Link to={subItem.url} onClick={() => setOpenMobile(false)}>
-                    {subItem.icon && <subItem.icon />}
-                    <span>{subItem.title}</span>
-                    {subItem.badge && <NavBadge>{subItem.badge}</NavBadge>}
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
+          <NavSubItems items={item.items} href={href} />
         </CollapsibleContent>
       </SidebarMenuItem>
     </Collapsible>
+  )
+}
+
+/** 递归渲染子菜单，支持任意层级 */
+function NavSubItems({ items, href }: { items: NavItem[]; href: string }) {
+  return (
+    <SidebarMenuSub>
+      {items.map((item) => {
+        const key = `${item.title}-${item.url ?? ''}`
+
+        if (!item.items)
+          return <SidebarMenuSubLink key={key} item={item} href={href} />
+
+        return <SidebarMenuSubCollapsible key={key} item={item} href={href} />
+      })}
+    </SidebarMenuSub>
+  )
+}
+
+function SidebarMenuSubLink({ item, href }: { item: NavLink; href: string }) {
+  const { setOpenMobile } = useSidebar()
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild isActive={checkIsActive(href, item)}>
+        <Link to={item.url} onClick={() => setOpenMobile(false)}>
+          {item.icon && <item.icon />}
+          <span>{item.title}</span>
+          {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        </Link>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  )
+}
+
+function SidebarMenuSubCollapsible({
+  item,
+  href,
+}: {
+  item: NavCollapsible
+  href: string
+}) {
+  return (
+    <SidebarMenuSubItem>
+      <Collapsible
+        defaultOpen={checkIsActive(href, item, true)}
+        className='group/sub-collapsible'
+      >
+        <CollapsibleTrigger asChild>
+          <SidebarMenuSubButton asChild>
+            <button type='button' className='w-full text-start'>
+              {item.icon && <item.icon />}
+              <span>{item.title}</span>
+              {item.badge && <NavBadge>{item.badge}</NavBadge>}
+              <ChevronRight className='ms-auto transition-transform duration-200 group-data-[state=open]/sub-collapsible:rotate-90 rtl:rotate-180' />
+            </button>
+          </SidebarMenuSubButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent className='CollapsibleContent'>
+          <NavSubItems items={item.items} href={href} />
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuSubItem>
   )
 }
 
@@ -153,7 +199,7 @@ function SidebarMenuCollapsedDropdown({
             {item.title} {item.badge ? `(${item.badge})` : ''}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {item.items.map((sub) => (
+          {flattenNavLinks(item.items).map((sub) => (
             <DropdownMenuItem key={`${sub.title}-${sub.url}`} asChild>
               <Link
                 to={sub.url}
@@ -173,13 +219,22 @@ function SidebarMenuCollapsedDropdown({
   )
 }
 
+/** 折叠态下拉菜单不支持多级展开，把后代链接拍平并用「父 / 子」区分 */
+function flattenNavLinks(items: NavItem[], prefix?: string): NavLink[] {
+  return items.flatMap((item) => {
+    const title = prefix ? `${prefix} / ${item.title}` : item.title
+    if (item.items) return flattenNavLinks(item.items, title)
+    return [{ ...item, title }]
+  })
+}
+
 function checkIsActive(href: string, item: NavItem, mainNav = false) {
-  return (
-    href === item.url || // /endpint?search=param
-    href.split('?')[0] === item.url || // endpoint
-    !!item?.items?.filter((i) => i.url === href).length || // if child nav is active
-    (mainNav &&
-      href.split('/')[1] !== '' &&
-      href.split('/')[1] === item?.url?.split('/')[1])
-  )
+  const path = href.split('?')[0]
+  if (item.url && (href === item.url || path === item.url)) return true
+  if (item.items?.some((child) => checkIsActive(href, child))) return true
+  if (mainNav && item.url) {
+    const current = path.split('/')[1]
+    return Boolean(current) && current === item.url.split('/')[1]
+  }
+  return false
 }

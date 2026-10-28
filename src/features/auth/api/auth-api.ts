@@ -83,7 +83,8 @@ export interface RouterVo {
 }
 
 /** 客户端 ID（对应后端 sys_client 表） */
-const CLIENT_ID = import.meta.env.VITE_APP_CLIENT_ID ?? 'e5cd7e4891bf95d1d19206ce24a7b32e'
+const CLIENT_ID =
+  import.meta.env.VITE_APP_CLIENT_ID ?? 'e5cd7e4891bf95d1d19206ce24a7b32e'
 
 /** 默认租户 ID */
 const TENANT_ID = import.meta.env.VITE_APP_TENANT_ID ?? '000000'
@@ -139,11 +140,13 @@ export function getRouters() {
  * 获取验证码
  */
 export function getCodeImg() {
-  return javaClient.request<RuoYiResponse<{
-    captchaEnabled: boolean
-    uuid: string
-    img: string
-  }>>({
+  return javaClient.request<
+    RuoYiResponse<{
+      captchaEnabled: boolean
+      uuid: string
+      img: string
+    }>
+  >({
     url: '/auth/code',
     method: 'get',
   })
@@ -153,10 +156,12 @@ export function getCodeImg() {
  * 获取租户列表
  */
 export function getTenantList() {
-  return javaClient.request<RuoYiResponse<{
-    tenantEnabled: boolean
-    voList: Array<{ tenantId: string; companyName: string; domain: string }>
-  }>>({
+  return javaClient.request<
+    RuoYiResponse<{
+      tenantEnabled: boolean
+      voList: Array<{ tenantId: string; companyName: string; domain: string }>
+    }>
+  >({
     url: '/auth/tenant/list',
     method: 'get',
   })

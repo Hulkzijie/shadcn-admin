@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   type SortingState,
   type VisibilityState,
@@ -5,7 +6,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import {
@@ -29,7 +29,12 @@ type TenantTableProps = {
   navigate: NavigateFn
 }
 
-export function TenantTable({ data, total, search, navigate }: TenantTableProps) {
+export function TenantTable({
+  data,
+  total,
+  search,
+  navigate,
+}: TenantTableProps) {
   const [rowSelection, setRowSelection] = useState({})
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [sorting, setSorting] = useState<SortingState>([])

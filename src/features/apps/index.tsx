@@ -1,6 +1,7 @@
 import { type ChangeEvent, useState } from 'react'
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { SlidersHorizontal, ArrowUpAZ, ArrowDownAZ } from 'lucide-react'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,7 +20,14 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { apps } from './data/apps'
 
-const route = getRouteApi('/_authenticated/apps/')
+const searchSchema = z.object({
+  type: z
+    .enum(['all', 'connected', 'notConnected'])
+    .optional()
+    .catch(undefined),
+  filter: z.string().optional().catch(''),
+  sort: z.enum(['asc', 'desc']).optional().catch(undefined),
+})
 
 type AppType = 'all' | 'connected' | 'notConnected'
 
@@ -34,8 +42,8 @@ export function Apps() {
     filter = '',
     type = 'all',
     sort: initSort = 'asc',
-  } = route.useSearch()
-  const navigate = route.useNavigate()
+  } = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const [sort, setSort] = useState(initSort)
   const [appType, setAppType] = useState(type)

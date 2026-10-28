@@ -18,7 +18,9 @@ const getRecognitionCtor = () => {
  * 基于 Web Speech API 的语音识别封装。
  * start / stop 为稳定引用，可作为 effect 依赖使用。
  */
-export function useSpeechRecognition(options: UseSpeechRecognitionOptions = {}) {
+export function useSpeechRecognition(
+  options: UseSpeechRecognitionOptions = {}
+) {
   const [supported] = useState(() => Boolean(getRecognitionCtor()))
   const [listening, setListening] = useState(false)
   const [interim, setInterim] = useState('')

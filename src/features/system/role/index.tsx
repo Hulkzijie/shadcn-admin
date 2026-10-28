@@ -1,5 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -12,11 +13,16 @@ import { RolePrimaryButtons } from './components/role-primary-buttons'
 import { RoleProvider } from './components/role-provider'
 import { RoleTable } from './components/role-table'
 
-const route = getRouteApi('/_authenticated/system/roles/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  roleName: z.string().optional().catch(''),
+  status: z.array(z.string()).optional().catch([]),
+})
 
 export function RoleList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysRoleQuery = {
     pageNum: search.page ?? 1,

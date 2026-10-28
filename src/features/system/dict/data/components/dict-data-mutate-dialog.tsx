@@ -24,8 +24,8 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { SelectDropdown } from '@/components/select-dropdown'
 import { Textarea } from '@/components/ui/textarea'
+import { SelectDropdown } from '@/components/select-dropdown'
 import {
   addDictData,
   getDictData,
@@ -156,7 +156,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='dictLabel'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       字典标签
                     </FormLabel>
@@ -176,7 +176,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='dictValue'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       字典键值
                     </FormLabel>
@@ -196,7 +196,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='dictType'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       字典类型
                     </FormLabel>
@@ -218,7 +218,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='dictSort'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>排序</FormLabel>
                     <FormControl>
                       <Input
@@ -244,7 +244,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='isDefault'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       是否默认
                     </FormLabel>
@@ -266,7 +266,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='cssClass'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       样式属性
                     </FormLabel>
@@ -286,7 +286,7 @@ export function DictDataMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 pt-2 text-end'>
                       备注
                     </FormLabel>

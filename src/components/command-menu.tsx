@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
+import { ArrowRight, Laptop, Moon, Sun } from 'lucide-react'
 import { useSearch } from '@/context/search-provider'
 import { useTheme } from '@/context/theme-provider'
 import {
@@ -12,13 +12,27 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import { sidebarData } from './layout/data/sidebar-data'
+import { useMenuNav } from './layout/data/use-menu-nav'
+import type { NavItem } from './layout/types'
 import { ScrollArea } from './ui/scroll-area'
+
+/** 把任意层级的菜单拍平成可搜索的链接，标题用「父 / 子」区分 */
+function flattenLinks(
+  items: NavItem[],
+  prefix?: string
+): { title: string; url: string }[] {
+  return items.flatMap((item) => {
+    const title = prefix ? `${prefix} / ${item.title}` : item.title
+    if (item.items) return flattenLinks(item.items, title)
+    return [{ title, url: item.url as string }]
+  })
+}
 
 export function CommandMenu() {
   const navigate = useNavigate()
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
+  const { navGroups } = useMenuNav()
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -34,40 +48,25 @@ export function CommandMenu() {
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
-            <CommandGroup key={group.title} heading={group.title}>
-              {group.items.map((navItem, i) => {
-                if (navItem.url)
-                  return (
-                    <CommandItem
-                      key={`${navItem.url}-${i}`}
-                      value={navItem.title}
-                      onSelect={() => {
-                        runCommand(() => navigate({ to: navItem.url }))
-                      }}
-                    >
-                      <div className='flex size-4 items-center justify-center'>
-                        <ArrowRight className='size-2 text-muted-foreground/80' />
-                      </div>
-                      {navItem.title}
-                    </CommandItem>
-                  )
-
-                return navItem.items?.map((subItem, i) => (
-                  <CommandItem
-                    key={`${navItem.title}-${subItem.url}-${i}`}
-                    value={`${navItem.title}-${subItem.url}`}
-                    onSelect={() => {
-                      runCommand(() => navigate({ to: subItem.url }))
-                    }}
-                  >
-                    <div className='flex size-4 items-center justify-center'>
-                      <ArrowRight className='size-2 text-muted-foreground/80' />
-                    </div>
-                    {navItem.title} <ChevronRight /> {subItem.title}
-                  </CommandItem>
-                ))
-              })}
+          {navGroups.map((group, groupIndex) => (
+            <CommandGroup
+              key={`${group.title}-${groupIndex}`}
+              heading={group.title || undefined}
+            >
+              {flattenLinks(group.items).map((navItem, i) => (
+                <CommandItem
+                  key={`${navItem.url}-${i}`}
+                  value={navItem.title}
+                  onSelect={() => {
+                    runCommand(() => navigate({ to: navItem.url }))
+                  }}
+                >
+                  <div className='flex size-4 items-center justify-center'>
+                    <ArrowRight className='size-2 text-muted-foreground/80' />
+                  </div>
+                  {navItem.title}
+                </CommandItem>
+              ))}
             </CommandGroup>
           ))}
           <CommandSeparator />

@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import {
+  type ExpandedState,
   type VisibilityState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { type NavigateFn, useTableUrlState } from '@/hooks/use-table-url-state'
 import {
@@ -17,16 +19,18 @@ import {
 } from '@/components/ui/table'
 import { DataTableToolbar } from '@/components/data-table'
 import { STATUS_OPTIONS } from '../../shared/constants'
-import { menuColumns as columns, type FlatMenu } from './menu-columns'
+import { menuColumns as columns, type MenuRow } from './menu-columns'
 
 type MenuTableProps = {
-  data: FlatMenu[]
+  data: MenuRow[]
   search: Record<string, unknown>
   navigate: NavigateFn
 }
 
 export function MenuTable({ data, search, navigate }: MenuTableProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  // 默认展开全部层级，用户可手动收起
+  const [expanded, setExpanded] = useState<ExpandedState>(true)
 
   const { columnFilters, onColumnFiltersChange } = useTableUrlState({
     search,
@@ -45,11 +49,16 @@ export function MenuTable({ data, search, navigate }: MenuTableProps) {
     state: {
       columnFilters,
       columnVisibility,
+      expanded,
     },
+    getRowId: (row) => String(row.menuId),
+    getSubRows: (row) => row.children,
     manualFiltering: true,
     onColumnFiltersChange,
     onColumnVisibilityChange: setColumnVisibility,
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
   })
 
   return (

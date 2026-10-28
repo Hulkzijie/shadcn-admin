@@ -39,7 +39,9 @@ export const tenantColumns: ColumnDef<SysTenantVo>[] = [
       <DataTableColumnHeader column={column} title='企业名称' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36 ps-3'>{row.getValue('companyName')}</LongText>
+      <LongText className='max-w-36 ps-3'>
+        {row.getValue('companyName')}
+      </LongText>
     ),
     enableHiding: false,
   },
@@ -49,7 +51,9 @@ export const tenantColumns: ColumnDef<SysTenantVo>[] = [
       <DataTableColumnHeader column={column} title='联系人' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36'>{row.getValue('contactUserName')}</LongText>
+      <LongText className='max-w-36'>
+        {row.getValue('contactUserName')}
+      </LongText>
     ),
   },
   {

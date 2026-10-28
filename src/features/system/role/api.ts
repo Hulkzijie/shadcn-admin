@@ -1,4 +1,9 @@
-import { sysList, sysRequest, type PageQuery } from '../shared/api'
+import {
+  sysList,
+  sysRequest,
+  type PageQuery,
+  type TreeNode,
+} from '../shared/api'
 
 export interface SysRoleVo {
   roleId: number
@@ -30,8 +35,8 @@ export interface SysRoleBo {
   deptCheckStrictly?: boolean
   status?: string
   remark?: string
-  menuIds?: number[]
-  deptIds?: number[]
+  menuIds?: (number | string)[]
+  deptIds?: (number | string)[]
 }
 
 /** GET /system/role/list 分页查询角色 */
@@ -76,5 +81,47 @@ export function roleOptionSelect() {
   return sysRequest<SysRoleVo[]>({
     url: '/system/role/optionselect',
     method: 'get',
+  })
+}
+
+/** 角色菜单权限树选择结果 */
+export interface SysRoleMenuTreeSelect {
+  menus: TreeNode[]
+  checkedKeys: (number | string)[]
+}
+
+/** 角色部门数据权限树选择结果 */
+export interface SysRoleDeptTreeSelect {
+  depts: TreeNode[]
+  checkedKeys: (number | string)[]
+}
+
+/** GET /system/menu/roleMenuTreeselect/{roleId} 角色菜单权限树 */
+export function getRoleMenuTreeSelect(roleId: number) {
+  return sysRequest<SysRoleMenuTreeSelect>({
+    url: `/system/menu/roleMenuTreeselect/${roleId}`,
+    method: 'get',
+  })
+}
+
+/** GET /system/role/deptTree/{roleId} 角色数据权限部门树 */
+export function getRoleDeptTreeSelect(roleId: number) {
+  return sysRequest<SysRoleDeptTreeSelect>({
+    url: `/system/role/deptTree/${roleId}`,
+    method: 'get',
+  })
+}
+
+/** PUT /system/role/dataScope 保存角色数据权限 */
+export function updateRoleDataScope(data: {
+  roleId: number
+  dataScope: string
+  deptCheckStrictly?: boolean
+  deptIds?: (number | string)[]
+}) {
+  return sysRequest<void>({
+    url: '/system/role/dataScope',
+    method: 'put',
+    data: data,
   })
 }

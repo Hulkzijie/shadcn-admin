@@ -24,7 +24,8 @@ type NavLink = BaseNavItem & {
 }
 
 type NavCollapsible = BaseNavItem & {
-  items: (BaseNavItem & { url: LinkProps['to'] | (string & {}) })[]
+  /** 支持任意层级嵌套，与后台菜单树的父子结构一致 */
+  items: NavItem[]
   url?: never
 }
 
@@ -38,7 +39,6 @@ type NavGroup = {
 type SidebarData = {
   user: User
   teams: Team[]
-  navGroups: NavGroup[]
 }
 
 export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink }

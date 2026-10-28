@@ -1,6 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { type Row } from '@tanstack/react-table'
 import { useNavigate } from '@tanstack/react-router'
+import { type Row } from '@tanstack/react-table'
 import { ListTree, ShieldCheck, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -47,8 +47,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         <DropdownMenuItem
           onClick={() =>
             navigate({
-              to: '/system/dict/data',
-              search: { dictType: row.original.dictType },
+              // 该页面由后台菜单动态注册，这里按完整地址跳转
+              href: `/system/dict/data?dictType=${encodeURIComponent(row.original.dictType)}`,
             })
           }
         >

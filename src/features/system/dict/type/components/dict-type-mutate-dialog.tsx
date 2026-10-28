@@ -139,7 +139,7 @@ export function DictTypeMutateDialog({
                 control={form.control}
                 name='dictName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       字典名称
                     </FormLabel>
@@ -159,7 +159,7 @@ export function DictTypeMutateDialog({
                 control={form.control}
                 name='dictType'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       字典类型
                     </FormLabel>
@@ -179,7 +179,7 @@ export function DictTypeMutateDialog({
                 control={form.control}
                 name='remark'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-start gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-start space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 pt-2 text-end'>
                       备注
                     </FormLabel>

@@ -283,7 +283,7 @@ function FlowEditor({ agentId }: { agentId: string }) {
           </p>
         </div>
         <Button asChild size='sm'>
-          <Link to='/agents'>返回 Agent 列表</Link>
+          <Link to={'/agents' as string}>返回 Agent 列表</Link>
         </Button>
       </div>
     )
@@ -299,7 +299,7 @@ function FlowEditor({ agentId }: { agentId: string }) {
           aria-label='返回 Agent 列表'
           className='rounded-full'
         >
-          <Link to='/agents'>
+          <Link to={'/agents' as string}>
             <ArrowLeft aria-hidden='true' />
           </Link>
         </Button>

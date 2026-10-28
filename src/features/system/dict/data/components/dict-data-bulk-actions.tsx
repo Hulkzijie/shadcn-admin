@@ -1,5 +1,5 @@
-import { type Table } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { type Table } from '@tanstack/react-table'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'

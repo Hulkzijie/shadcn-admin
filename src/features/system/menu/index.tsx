@@ -1,31 +1,26 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { listMenus, type SysMenuQuery, type SysMenuVo } from './api'
-import { type FlatMenu } from './components/menu-columns'
+import { listMenus, type SysMenuQuery } from './api'
 import { MenuDialogs } from './components/menu-dialogs'
 import { MenuPrimaryButtons } from './components/menu-primary-buttons'
 import { MenuProvider } from './components/menu-provider'
 import { MenuTable } from './components/menu-table'
 
-const route = getRouteApi('/_authenticated/system/menus/')
-
-function flattenMenus(nodes: SysMenuVo[] | undefined, depth = 0): FlatMenu[] {
-  if (!nodes?.length) return []
-  return nodes.flatMap((n) => [
-    { ...n, _depth: depth },
-    ...flattenMenus(n.children, depth + 1),
-  ])
-}
+const searchSchema = z.object({
+  menuName: z.string().optional().catch(''),
+  status: z.array(z.string()).optional().catch([]),
+})
 
 export function MenuList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysMenuQuery = {
     menuName: search.menuName || undefined,
@@ -37,7 +32,7 @@ export function MenuList() {
     queryFn: () => listMenus(params),
   })
 
-  const flatMenus = flattenMenus(data)
+  const menuTree = data ?? []
 
   return (
     <MenuProvider>
@@ -63,7 +58,7 @@ export function MenuList() {
             加载中...
           </div>
         ) : (
-          <MenuTable data={flatMenus} search={search} navigate={navigate} />
+          <MenuTable data={menuTree} search={search} navigate={navigate} />
         )}
       </Main>
 

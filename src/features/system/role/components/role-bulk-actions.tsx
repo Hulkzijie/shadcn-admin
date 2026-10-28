@@ -1,5 +1,5 @@
-import { type Table } from '@tanstack/react-table'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { type Table } from '@tanstack/react-table'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,9 @@ export function DataTableBulkActions<TData>({
   })
 
   const handleDelete = () => {
-    const roleIds = selectedRows.map((row) => (row.original as SysRoleVo).roleId)
+    const roleIds = selectedRows.map(
+      (row) => (row.original as SysRoleVo).roleId
+    )
     if (!roleIds.length) return
     remove(roleIds)
   }

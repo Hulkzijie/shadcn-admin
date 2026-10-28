@@ -33,7 +33,11 @@ export function UploadZone({
   const [dragging, setDragging] = useState(false)
 
   const handleFiles = (incoming: File[]) => {
-    const { accepted, errors } = filterFiles(incoming, files.length, allowedExtensions)
+    const { accepted, errors } = filterFiles(
+      incoming,
+      files.length,
+      allowedExtensions
+    )
     if (accepted.length > 0) onAddFiles(accepted)
     if (errors.length > 0) {
       errors.forEach((msg) => toast.error(msg))

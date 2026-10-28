@@ -20,15 +20,18 @@ export async function createConversation(
 }
 
 /** 进入聊天页面时读取当前用户的历史会话列表。 */
-export async function getConversations(): Promise<ConversationListResponse['items']> {
-  const { data } = await fastapiClient.get<ConversationListResponse>(
-    '/api/conversations'
-  )
+export async function getConversations(): Promise<
+  ConversationListResponse['items']
+> {
+  const { data } =
+    await fastapiClient.get<ConversationListResponse>('/api/conversations')
   return data.items
 }
 
 /** 删除会话及其服务端保存的全部历史消息。 */
-export async function deleteConversation(conversationId: string): Promise<void> {
+export async function deleteConversation(
+  conversationId: string
+): Promise<void> {
   await fastapiClient.delete(
     `/api/conversations/${encodeURIComponent(conversationId)}`
   )

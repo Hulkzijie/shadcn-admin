@@ -13,6 +13,7 @@ import { Route as ClerkRouteRouteImport } from './routes/clerk/route'
 import { Route as AuthenticatedBareRouteRouteImport } from './routes/_authenticated-bare/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedSplatRouteImport } from './routes/_authenticated/$'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -26,18 +27,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
-import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedQaIndexRouteImport } from './routes/_authenticated/qa/index'
-import { Route as AuthenticatedKnowledgeBaseIndexRouteImport } from './routes/_authenticated/knowledge-base/index'
-import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
-import { Route as AuthenticatedGisIndexRouteImport } from './routes/_authenticated/gis/index'
-import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
-import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
-import { Route as AuthenticatedAppPlazaIndexRouteImport } from './routes/_authenticated/app-plaza/index'
-import { Route as AuthenticatedAiChatIndexRouteImport } from './routes/_authenticated/ai-chat/index'
-import { Route as AuthenticatedAgentsIndexRouteImport } from './routes/_authenticated/agents/index'
 import { Route as AuthenticatedBareAgentIndexRouteImport } from './routes/_authenticated-bare/agent/index'
 import { Route as ClerkAuthenticatedUserManagementRouteImport } from './routes/clerk/_authenticated/user-management'
 import { Route as ClerkauthSignUpRouteImport } from './routes/clerk/(auth)/sign-up'
@@ -48,14 +38,7 @@ import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_a
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedBareAgentFlowRouteImport } from './routes/_authenticated-bare/agent/flow'
-import { Route as AuthenticatedSystemUsersIndexRouteImport } from './routes/_authenticated/system/users/index'
-import { Route as AuthenticatedSystemTenantsIndexRouteImport } from './routes/_authenticated/system/tenants/index'
-import { Route as AuthenticatedSystemRolesIndexRouteImport } from './routes/_authenticated/system/roles/index'
-import { Route as AuthenticatedSystemMenusIndexRouteImport } from './routes/_authenticated/system/menus/index'
-import { Route as AuthenticatedSystemDeptsIndexRouteImport } from './routes/_authenticated/system/depts/index'
 import { Route as AuthenticatedBareAgentsAgentIdFlowRouteImport } from './routes/_authenticated-bare/agents/$agentId/flow'
-import { Route as AuthenticatedSystemDictTypeIndexRouteImport } from './routes/_authenticated/system/dict/type/index'
-import { Route as AuthenticatedSystemDictDataIndexRouteImport } from './routes/_authenticated/system/dict/data/index'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
   id: '/clerk',
@@ -73,6 +56,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSplatRoute = AuthenticatedSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -139,71 +127,11 @@ const AuthenticatedSettingsRouteRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
-  id: '/users/',
-  path: '/users/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
-  id: '/tasks/',
-  path: '/tasks/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedQaIndexRoute = AuthenticatedQaIndexRouteImport.update({
-  id: '/qa/',
-  path: '/qa/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedKnowledgeBaseIndexRoute =
-  AuthenticatedKnowledgeBaseIndexRouteImport.update({
-    id: '/knowledge-base/',
-    path: '/knowledge-base/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHelpCenterIndexRoute =
-  AuthenticatedHelpCenterIndexRouteImport.update({
-    id: '/help-center/',
-    path: '/help-center/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedGisIndexRoute = AuthenticatedGisIndexRouteImport.update({
-  id: '/gis/',
-  path: '/gis/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
-  id: '/chats/',
-  path: '/chats/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
-  id: '/apps/',
-  path: '/apps/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAppPlazaIndexRoute =
-  AuthenticatedAppPlazaIndexRouteImport.update({
-    id: '/app-plaza/',
-    path: '/app-plaza/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAiChatIndexRoute =
-  AuthenticatedAiChatIndexRouteImport.update({
-    id: '/ai-chat/',
-    path: '/ai-chat/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAgentsIndexRoute =
-  AuthenticatedAgentsIndexRouteImport.update({
-    id: '/agents/',
-    path: '/agents/',
-    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBareAgentIndexRoute =
   AuthenticatedBareAgentIndexRouteImport.update({
@@ -263,53 +191,11 @@ const AuthenticatedBareAgentFlowRoute =
     path: '/agent/flow',
     getParentRoute: () => AuthenticatedBareRouteRoute,
   } as any)
-const AuthenticatedSystemUsersIndexRoute =
-  AuthenticatedSystemUsersIndexRouteImport.update({
-    id: '/system/users/',
-    path: '/system/users/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSystemTenantsIndexRoute =
-  AuthenticatedSystemTenantsIndexRouteImport.update({
-    id: '/system/tenants/',
-    path: '/system/tenants/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSystemRolesIndexRoute =
-  AuthenticatedSystemRolesIndexRouteImport.update({
-    id: '/system/roles/',
-    path: '/system/roles/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSystemMenusIndexRoute =
-  AuthenticatedSystemMenusIndexRouteImport.update({
-    id: '/system/menus/',
-    path: '/system/menus/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSystemDeptsIndexRoute =
-  AuthenticatedSystemDeptsIndexRouteImport.update({
-    id: '/system/depts/',
-    path: '/system/depts/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedBareAgentsAgentIdFlowRoute =
   AuthenticatedBareAgentsAgentIdFlowRouteImport.update({
     id: '/agents/$agentId/flow',
     path: '/agents/$agentId/flow',
     getParentRoute: () => AuthenticatedBareRouteRoute,
-  } as any)
-const AuthenticatedSystemDictTypeIndexRoute =
-  AuthenticatedSystemDictTypeIndexRouteImport.update({
-    id: '/system/dict/type/',
-    path: '/system/dict/type/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSystemDictDataIndexRoute =
-  AuthenticatedSystemDictDataIndexRouteImport.update({
-    id: '/system/dict/data/',
-    path: '/system/dict/data/',
-    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -326,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/$': typeof AuthenticatedSplatRoute
   '/agent/flow': typeof AuthenticatedBareAgentFlowRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -336,26 +223,8 @@ export interface FileRoutesByFullPath {
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/agent/': typeof AuthenticatedBareAgentIndexRoute
-  '/agents/': typeof AuthenticatedAgentsIndexRoute
-  '/ai-chat/': typeof AuthenticatedAiChatIndexRoute
-  '/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
-  '/apps/': typeof AuthenticatedAppsIndexRoute
-  '/chats/': typeof AuthenticatedChatsIndexRoute
-  '/gis/': typeof AuthenticatedGisIndexRoute
-  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
-  '/knowledge-base/': typeof AuthenticatedKnowledgeBaseIndexRoute
-  '/qa/': typeof AuthenticatedQaIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/users/': typeof AuthenticatedUsersIndexRoute
   '/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
-  '/system/depts/': typeof AuthenticatedSystemDeptsIndexRoute
-  '/system/menus/': typeof AuthenticatedSystemMenusIndexRoute
-  '/system/roles/': typeof AuthenticatedSystemRolesIndexRoute
-  '/system/tenants/': typeof AuthenticatedSystemTenantsIndexRoute
-  '/system/users/': typeof AuthenticatedSystemUsersIndexRoute
-  '/system/dict/data/': typeof AuthenticatedSystemDictDataIndexRoute
-  '/system/dict/type/': typeof AuthenticatedSystemDictTypeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
@@ -370,6 +239,7 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/$': typeof AuthenticatedSplatRoute
   '/agent/flow': typeof AuthenticatedBareAgentFlowRoute
   '/errors/$error': typeof AuthenticatedErrorsErrorRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -380,26 +250,8 @@ export interface FileRoutesByTo {
   '/clerk/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/agent': typeof AuthenticatedBareAgentIndexRoute
-  '/agents': typeof AuthenticatedAgentsIndexRoute
-  '/ai-chat': typeof AuthenticatedAiChatIndexRoute
-  '/app-plaza': typeof AuthenticatedAppPlazaIndexRoute
-  '/apps': typeof AuthenticatedAppsIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
-  '/gis': typeof AuthenticatedGisIndexRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
-  '/knowledge-base': typeof AuthenticatedKnowledgeBaseIndexRoute
-  '/qa': typeof AuthenticatedQaIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
-  '/tasks': typeof AuthenticatedTasksIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
   '/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
-  '/system/depts': typeof AuthenticatedSystemDeptsIndexRoute
-  '/system/menus': typeof AuthenticatedSystemMenusIndexRoute
-  '/system/roles': typeof AuthenticatedSystemRolesIndexRoute
-  '/system/tenants': typeof AuthenticatedSystemTenantsIndexRoute
-  '/system/users': typeof AuthenticatedSystemUsersIndexRoute
-  '/system/dict/data': typeof AuthenticatedSystemDictDataIndexRoute
-  '/system/dict/type': typeof AuthenticatedSystemDictTypeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -419,6 +271,7 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/_authenticated/$': typeof AuthenticatedSplatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated-bare/agent/flow': typeof AuthenticatedBareAgentFlowRoute
   '/_authenticated/errors/$error': typeof AuthenticatedErrorsErrorRoute
@@ -430,26 +283,8 @@ export interface FileRoutesById {
   '/clerk/(auth)/sign-up': typeof ClerkauthSignUpRoute
   '/clerk/_authenticated/user-management': typeof ClerkAuthenticatedUserManagementRoute
   '/_authenticated-bare/agent/': typeof AuthenticatedBareAgentIndexRoute
-  '/_authenticated/agents/': typeof AuthenticatedAgentsIndexRoute
-  '/_authenticated/ai-chat/': typeof AuthenticatedAiChatIndexRoute
-  '/_authenticated/app-plaza/': typeof AuthenticatedAppPlazaIndexRoute
-  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
-  '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
-  '/_authenticated/gis/': typeof AuthenticatedGisIndexRoute
-  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
-  '/_authenticated/knowledge-base/': typeof AuthenticatedKnowledgeBaseIndexRoute
-  '/_authenticated/qa/': typeof AuthenticatedQaIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
-  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated-bare/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
-  '/_authenticated/system/depts/': typeof AuthenticatedSystemDeptsIndexRoute
-  '/_authenticated/system/menus/': typeof AuthenticatedSystemMenusIndexRoute
-  '/_authenticated/system/roles/': typeof AuthenticatedSystemRolesIndexRoute
-  '/_authenticated/system/tenants/': typeof AuthenticatedSystemTenantsIndexRoute
-  '/_authenticated/system/users/': typeof AuthenticatedSystemUsersIndexRoute
-  '/_authenticated/system/dict/data/': typeof AuthenticatedSystemDictDataIndexRoute
-  '/_authenticated/system/dict/type/': typeof AuthenticatedSystemDictTypeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -467,6 +302,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/$'
     | '/agent/flow'
     | '/errors/$error'
     | '/settings/account'
@@ -477,26 +313,8 @@ export interface FileRouteTypes {
     | '/clerk/sign-up'
     | '/clerk/user-management'
     | '/agent/'
-    | '/agents/'
-    | '/ai-chat/'
-    | '/app-plaza/'
-    | '/apps/'
-    | '/chats/'
-    | '/gis/'
-    | '/help-center/'
-    | '/knowledge-base/'
-    | '/qa/'
     | '/settings/'
-    | '/tasks/'
-    | '/users/'
     | '/agents/$agentId/flow'
-    | '/system/depts/'
-    | '/system/menus/'
-    | '/system/roles/'
-    | '/system/tenants/'
-    | '/system/users/'
-    | '/system/dict/data/'
-    | '/system/dict/type/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -511,6 +329,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/$'
     | '/agent/flow'
     | '/errors/$error'
     | '/settings/account'
@@ -521,26 +340,8 @@ export interface FileRouteTypes {
     | '/clerk/sign-up'
     | '/clerk/user-management'
     | '/agent'
-    | '/agents'
-    | '/ai-chat'
-    | '/app-plaza'
-    | '/apps'
-    | '/chats'
-    | '/gis'
-    | '/help-center'
-    | '/knowledge-base'
-    | '/qa'
     | '/settings'
-    | '/tasks'
-    | '/users'
     | '/agents/$agentId/flow'
-    | '/system/depts'
-    | '/system/menus'
-    | '/system/roles'
-    | '/system/tenants'
-    | '/system/users'
-    | '/system/dict/data'
-    | '/system/dict/type'
   id:
     | '__root__'
     | '/_authenticated'
@@ -559,6 +360,7 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/_authenticated/$'
     | '/_authenticated/'
     | '/_authenticated-bare/agent/flow'
     | '/_authenticated/errors/$error'
@@ -570,26 +372,8 @@ export interface FileRouteTypes {
     | '/clerk/(auth)/sign-up'
     | '/clerk/_authenticated/user-management'
     | '/_authenticated-bare/agent/'
-    | '/_authenticated/agents/'
-    | '/_authenticated/ai-chat/'
-    | '/_authenticated/app-plaza/'
-    | '/_authenticated/apps/'
-    | '/_authenticated/chats/'
-    | '/_authenticated/gis/'
-    | '/_authenticated/help-center/'
-    | '/_authenticated/knowledge-base/'
-    | '/_authenticated/qa/'
     | '/_authenticated/settings/'
-    | '/_authenticated/tasks/'
-    | '/_authenticated/users/'
     | '/_authenticated-bare/agents/$agentId/flow'
-    | '/_authenticated/system/depts/'
-    | '/_authenticated/system/menus/'
-    | '/_authenticated/system/roles/'
-    | '/_authenticated/system/tenants/'
-    | '/_authenticated/system/users/'
-    | '/_authenticated/system/dict/data/'
-    | '/_authenticated/system/dict/type/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -636,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/$': {
+      id: '/_authenticated/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof AuthenticatedSplatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/(errors)/503': {
@@ -729,89 +520,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/users/': {
-      id: '/_authenticated/users/'
-      path: '/users'
-      fullPath: '/users/'
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tasks/': {
-      id: '/_authenticated/tasks/'
-      path: '/tasks'
-      fullPath: '/tasks/'
-      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/qa/': {
-      id: '/_authenticated/qa/'
-      path: '/qa'
-      fullPath: '/qa/'
-      preLoaderRoute: typeof AuthenticatedQaIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/knowledge-base/': {
-      id: '/_authenticated/knowledge-base/'
-      path: '/knowledge-base'
-      fullPath: '/knowledge-base/'
-      preLoaderRoute: typeof AuthenticatedKnowledgeBaseIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/'
-      path: '/help-center'
-      fullPath: '/help-center/'
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/gis/': {
-      id: '/_authenticated/gis/'
-      path: '/gis'
-      fullPath: '/gis/'
-      preLoaderRoute: typeof AuthenticatedGisIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chats/': {
-      id: '/_authenticated/chats/'
-      path: '/chats'
-      fullPath: '/chats/'
-      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/apps/': {
-      id: '/_authenticated/apps/'
-      path: '/apps'
-      fullPath: '/apps/'
-      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/app-plaza/': {
-      id: '/_authenticated/app-plaza/'
-      path: '/app-plaza'
-      fullPath: '/app-plaza/'
-      preLoaderRoute: typeof AuthenticatedAppPlazaIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ai-chat/': {
-      id: '/_authenticated/ai-chat/'
-      path: '/ai-chat'
-      fullPath: '/ai-chat/'
-      preLoaderRoute: typeof AuthenticatedAiChatIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/agents/': {
-      id: '/_authenticated/agents/'
-      path: '/agents'
-      fullPath: '/agents/'
-      preLoaderRoute: typeof AuthenticatedAgentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated-bare/agent/': {
       id: '/_authenticated-bare/agent/'
@@ -883,61 +597,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBareAgentFlowRouteImport
       parentRoute: typeof AuthenticatedBareRouteRoute
     }
-    '/_authenticated/system/users/': {
-      id: '/_authenticated/system/users/'
-      path: '/system/users'
-      fullPath: '/system/users/'
-      preLoaderRoute: typeof AuthenticatedSystemUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/system/tenants/': {
-      id: '/_authenticated/system/tenants/'
-      path: '/system/tenants'
-      fullPath: '/system/tenants/'
-      preLoaderRoute: typeof AuthenticatedSystemTenantsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/system/roles/': {
-      id: '/_authenticated/system/roles/'
-      path: '/system/roles'
-      fullPath: '/system/roles/'
-      preLoaderRoute: typeof AuthenticatedSystemRolesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/system/menus/': {
-      id: '/_authenticated/system/menus/'
-      path: '/system/menus'
-      fullPath: '/system/menus/'
-      preLoaderRoute: typeof AuthenticatedSystemMenusIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/system/depts/': {
-      id: '/_authenticated/system/depts/'
-      path: '/system/depts'
-      fullPath: '/system/depts/'
-      preLoaderRoute: typeof AuthenticatedSystemDeptsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated-bare/agents/$agentId/flow': {
       id: '/_authenticated-bare/agents/$agentId/flow'
       path: '/agents/$agentId/flow'
       fullPath: '/agents/$agentId/flow'
       preLoaderRoute: typeof AuthenticatedBareAgentsAgentIdFlowRouteImport
       parentRoute: typeof AuthenticatedBareRouteRoute
-    }
-    '/_authenticated/system/dict/type/': {
-      id: '/_authenticated/system/dict/type/'
-      path: '/system/dict/type'
-      fullPath: '/system/dict/type/'
-      preLoaderRoute: typeof AuthenticatedSystemDictTypeIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/system/dict/data/': {
-      id: '/_authenticated/system/dict/data/'
-      path: '/system/dict/data'
-      fullPath: '/system/dict/data/'
-      preLoaderRoute: typeof AuthenticatedSystemDictDataIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -967,50 +632,16 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedSplatRoute: typeof AuthenticatedSplatRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
-  AuthenticatedAgentsIndexRoute: typeof AuthenticatedAgentsIndexRoute
-  AuthenticatedAiChatIndexRoute: typeof AuthenticatedAiChatIndexRoute
-  AuthenticatedAppPlazaIndexRoute: typeof AuthenticatedAppPlazaIndexRoute
-  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
-  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
-  AuthenticatedGisIndexRoute: typeof AuthenticatedGisIndexRoute
-  AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
-  AuthenticatedKnowledgeBaseIndexRoute: typeof AuthenticatedKnowledgeBaseIndexRoute
-  AuthenticatedQaIndexRoute: typeof AuthenticatedQaIndexRoute
-  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
-  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
-  AuthenticatedSystemDeptsIndexRoute: typeof AuthenticatedSystemDeptsIndexRoute
-  AuthenticatedSystemMenusIndexRoute: typeof AuthenticatedSystemMenusIndexRoute
-  AuthenticatedSystemRolesIndexRoute: typeof AuthenticatedSystemRolesIndexRoute
-  AuthenticatedSystemTenantsIndexRoute: typeof AuthenticatedSystemTenantsIndexRoute
-  AuthenticatedSystemUsersIndexRoute: typeof AuthenticatedSystemUsersIndexRoute
-  AuthenticatedSystemDictDataIndexRoute: typeof AuthenticatedSystemDictDataIndexRoute
-  AuthenticatedSystemDictTypeIndexRoute: typeof AuthenticatedSystemDictTypeIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
+  AuthenticatedSplatRoute: AuthenticatedSplatRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedErrorsErrorRoute: AuthenticatedErrorsErrorRoute,
-  AuthenticatedAgentsIndexRoute: AuthenticatedAgentsIndexRoute,
-  AuthenticatedAiChatIndexRoute: AuthenticatedAiChatIndexRoute,
-  AuthenticatedAppPlazaIndexRoute: AuthenticatedAppPlazaIndexRoute,
-  AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
-  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
-  AuthenticatedGisIndexRoute: AuthenticatedGisIndexRoute,
-  AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
-  AuthenticatedKnowledgeBaseIndexRoute: AuthenticatedKnowledgeBaseIndexRoute,
-  AuthenticatedQaIndexRoute: AuthenticatedQaIndexRoute,
-  AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
-  AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
-  AuthenticatedSystemDeptsIndexRoute: AuthenticatedSystemDeptsIndexRoute,
-  AuthenticatedSystemMenusIndexRoute: AuthenticatedSystemMenusIndexRoute,
-  AuthenticatedSystemRolesIndexRoute: AuthenticatedSystemRolesIndexRoute,
-  AuthenticatedSystemTenantsIndexRoute: AuthenticatedSystemTenantsIndexRoute,
-  AuthenticatedSystemUsersIndexRoute: AuthenticatedSystemUsersIndexRoute,
-  AuthenticatedSystemDictDataIndexRoute: AuthenticatedSystemDictDataIndexRoute,
-  AuthenticatedSystemDictTypeIndexRoute: AuthenticatedSystemDictTypeIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

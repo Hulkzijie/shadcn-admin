@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import {
   type SortingState,
   type VisibilityState,
@@ -13,6 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   Table,
@@ -28,7 +29,19 @@ import { type Task } from '../data/schema'
 import { DataTableBulkActions } from './data-table-bulk-actions'
 import { tasksColumns as columns } from './tasks-columns'
 
-const route = getRouteApi('/_authenticated/tasks/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  status: z
+    .array(z.enum(statuses.map((status) => status.value)))
+    .optional()
+    .catch([]),
+  priority: z
+    .array(z.enum(priorities.map((priority) => priority.value)))
+    .optional()
+    .catch([]),
+  filter: z.string().optional().catch(''),
+})
 
 type DataTableProps = {
   data: Task[]
@@ -55,8 +68,8 @@ export function TasksTable({ data }: DataTableProps) {
     onPaginationChange,
     ensurePageInRange,
   } = useTableUrlState({
-    search: route.useSearch(),
-    navigate: route.useNavigate(),
+    search: useRouteSearch(searchSchema),
+    navigate: useRouteNavigate(),
     pagination: { defaultPage: 1, defaultPageSize: 10 },
     globalFilter: { enabled: true, key: 'filter' },
     columnFilters: [

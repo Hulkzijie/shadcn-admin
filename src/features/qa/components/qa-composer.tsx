@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState, type SubmitEvent } from 'react'
-import { AudioLines, FileText, Mic, MicOff, Paperclip, Send, X } from 'lucide-react'
+import {
+  AudioLines,
+  FileText,
+  Mic,
+  MicOff,
+  Paperclip,
+  Send,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { createId, formatFileSize } from '../lib/qa-service'
-import { useSpeechRecognition } from '../hooks/use-speech-recognition'
 import { type QaAttachment } from '../data/qa-types'
+import { useSpeechRecognition } from '../hooks/use-speech-recognition'
+import { createId, formatFileSize } from '../lib/qa-service'
 
 type QaComposerProps = {
   disabled?: boolean
@@ -15,8 +23,7 @@ type QaComposerProps = {
   onOpenVoiceCall: () => void
 }
 
-const ACCEPT =
-  'image/*,.pdf,.txt,.md,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx'
+const ACCEPT = 'image/*,.pdf,.txt,.md,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx'
 
 /** 提问框：附件上传 + 语音输入 + 语音通话入口 */
 export function QaComposer({
@@ -32,12 +39,17 @@ export function QaComposer({
   /** 输入框仍持有的对象 URL，移除附件或提交时回收 */
   const ownedUrlsRef = useRef<string[]>([])
 
-  const { supported: micSupported, listening, interim, start, stop } =
-    useSpeechRecognition({
-      continuous: false,
-      onResult: (transcript) =>
-        setInput((prev) => (prev ? `${prev}${transcript}` : transcript)),
-    })
+  const {
+    supported: micSupported,
+    listening,
+    interim,
+    start,
+    stop,
+  } = useSpeechRecognition({
+    continuous: false,
+    onResult: (transcript) =>
+      setInput((prev) => (prev ? `${prev}${transcript}` : transcript)),
+  })
 
   useEffect(() => {
     if (autoFocus) textareaRef.current?.focus()
@@ -120,7 +132,7 @@ export function QaComposer({
                   <FileText className='size-4 text-muted-foreground' />
                 </span>
               )}
-              <span className='min-w-0 max-w-40'>
+              <span className='max-w-40 min-w-0'>
                 <span className='block truncate text-xs font-medium'>
                   {attachment.name}
                 </span>

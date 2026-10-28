@@ -1,83 +1,73 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
+const orders = [
+  {
+    name: '王雨桐',
+    email: 'wangyutong@wisecloud.cn',
+    amount: '¥1,999.00',
+    time: '2 分钟前',
+    fallback: 'WY',
+    avatar: '/avatars/01.png',
+  },
+  {
+    name: '李泽宇',
+    email: 'lizeyu@wisecloud.cn',
+    amount: '¥39.00',
+    time: '18 分钟前',
+    fallback: 'LZ',
+    avatar: '/avatars/02.png',
+  },
+  {
+    name: '陈思远',
+    email: 'chensiyuan@wisecloud.cn',
+    amount: '¥299.00',
+    time: '1 小时前',
+    fallback: 'CS',
+    avatar: '/avatars/03.png',
+  },
+  {
+    name: '赵一诺',
+    email: 'zhaoyinuo@wisecloud.cn',
+    amount: '¥99.00',
+    time: '3 小时前',
+    fallback: 'ZY',
+    avatar: '/avatars/04.png',
+  },
+  {
+    name: '周可欣',
+    email: 'zhoukexin@wisecloud.cn',
+    amount: '¥39.00',
+    time: '昨天 21:40',
+    fallback: 'ZK',
+    avatar: '/avatars/05.png',
+  },
+]
+
 export function RecentSales() {
   return (
-    <div className='space-y-8'>
-      <div className='flex items-center gap-4'>
-        <Avatar className='h-9 w-9'>
-          <AvatarImage src='/avatars/01.png' alt='Avatar' />
-          <AvatarFallback>OM</AvatarFallback>
-        </Avatar>
-        <div className='flex flex-1 flex-wrap items-center justify-between'>
-          <div className='space-y-1'>
-            <p className='text-sm leading-none font-medium'>Olivia Martin</p>
-            <p className='text-sm text-muted-foreground'>
-              olivia.martin@email.com
+    <div className='flex flex-col gap-6'>
+      {orders.map((order) => (
+        <div key={order.email} className='flex items-center gap-3'>
+          <Avatar className='size-9'>
+            <AvatarImage src={order.avatar} alt={order.name} />
+            <AvatarFallback>{order.fallback}</AvatarFallback>
+          </Avatar>
+          <div className='flex min-w-0 flex-1 flex-col gap-1'>
+            <p className='truncate text-sm font-medium leading-none'>
+              {order.name}
+            </p>
+            <p className='truncate text-xs text-muted-foreground'>
+              {order.email}
             </p>
           </div>
-          <div className='font-medium'>+$1,999.00</div>
-        </div>
-      </div>
-      <div className='flex items-center gap-4'>
-        <Avatar className='flex h-9 w-9 items-center justify-center space-y-0 border'>
-          <AvatarImage src='/avatars/02.png' alt='Avatar' />
-          <AvatarFallback>JL</AvatarFallback>
-        </Avatar>
-        <div className='flex flex-1 flex-wrap items-center justify-between'>
-          <div className='space-y-1'>
-            <p className='text-sm leading-none font-medium'>Jackson Lee</p>
-            <p className='text-sm text-muted-foreground'>
-              jackson.lee@email.com
-            </p>
+          <div className='flex shrink-0 flex-col items-end gap-1'>
+            <span className='text-sm font-medium tabular-nums'>
+              {order.amount}
+            </span>
+            <span className='text-xs text-muted-foreground'>{order.time}</span>
           </div>
-          <div className='font-medium'>+$39.00</div>
         </div>
-      </div>
-      <div className='flex items-center gap-4'>
-        <Avatar className='h-9 w-9'>
-          <AvatarImage src='/avatars/03.png' alt='Avatar' />
-          <AvatarFallback>IN</AvatarFallback>
-        </Avatar>
-        <div className='flex flex-1 flex-wrap items-center justify-between'>
-          <div className='space-y-1'>
-            <p className='text-sm leading-none font-medium'>Isabella Nguyen</p>
-            <p className='text-sm text-muted-foreground'>
-              isabella.nguyen@email.com
-            </p>
-          </div>
-          <div className='font-medium'>+$299.00</div>
-        </div>
-      </div>
-
-      <div className='flex items-center gap-4'>
-        <Avatar className='h-9 w-9'>
-          <AvatarImage src='/avatars/04.png' alt='Avatar' />
-          <AvatarFallback>WK</AvatarFallback>
-        </Avatar>
-        <div className='flex flex-1 flex-wrap items-center justify-between'>
-          <div className='space-y-1'>
-            <p className='text-sm leading-none font-medium'>William Kim</p>
-            <p className='text-sm text-muted-foreground'>will@email.com</p>
-          </div>
-          <div className='font-medium'>+$99.00</div>
-        </div>
-      </div>
-
-      <div className='flex items-center gap-4'>
-        <Avatar className='h-9 w-9'>
-          <AvatarImage src='/avatars/05.png' alt='Avatar' />
-          <AvatarFallback>SD</AvatarFallback>
-        </Avatar>
-        <div className='flex flex-1 flex-wrap items-center justify-between'>
-          <div className='space-y-1'>
-            <p className='text-sm leading-none font-medium'>Sofia Davis</p>
-            <p className='text-sm text-muted-foreground'>
-              sofia.davis@email.com
-            </p>
-          </div>
-          <div className='font-medium'>+$39.00</div>
-        </div>
-      </div>
+      ))}
     </div>
   )
 }

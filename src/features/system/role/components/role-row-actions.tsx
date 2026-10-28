@@ -1,6 +1,6 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons'
 import { type Row } from '@tanstack/react-table'
-import { ShieldCheck, Trash2 } from 'lucide-react'
+import { KeyRound, ShieldCheck, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -31,6 +31,17 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-40'>
+        <DropdownMenuItem
+          onClick={() => {
+            setCurrentRow(row.original)
+            setOpen('auth')
+          }}
+        >
+          分配权限
+          <DropdownMenuShortcut>
+            <KeyRound size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             setCurrentRow(row.original)

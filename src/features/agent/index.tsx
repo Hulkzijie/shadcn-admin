@@ -317,7 +317,7 @@ export function AgentHome() {
         </div>
         <div className='flex shrink-0 items-center gap-1'>
           <Button asChild variant='ghost' size='sm' className='px-2 sm:px-3'>
-            <Link to='/agents' aria-label='打开智能体列表'>
+            <Link to={'/agents' as string} aria-label='打开智能体列表'>
               <Workflow className='size-4' aria-hidden='true' />
               <span className='hidden sm:inline'>编排</span>
             </Link>

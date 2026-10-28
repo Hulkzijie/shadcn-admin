@@ -101,8 +101,7 @@ export function DeptMutateDialog({
     if (isEdit && detail) {
       form.reset({
         deptName: detail.deptName ?? '',
-        parentId:
-          detail.parentId !== undefined ? String(detail.parentId) : '0',
+        parentId: detail.parentId !== undefined ? String(detail.parentId) : '0',
         orderNum: detail.orderNum !== undefined ? String(detail.orderNum) : '0',
         leader: detail.leader !== undefined ? String(detail.leader) : '',
         phone: detail.phone ?? '',
@@ -174,7 +173,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='parentId'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       上级部门
                     </FormLabel>
@@ -194,7 +193,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='deptName'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       部门名称
                     </FormLabel>
@@ -214,7 +213,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='orderNum'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>排序</FormLabel>
                     <FormControl>
                       <Input
@@ -232,8 +231,10 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='leader'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
-                    <FormLabel className='col-span-2 text-end'>负责人</FormLabel>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
+                    <FormLabel className='col-span-2 text-end'>
+                      负责人
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder='请输入负责人用户 ID'
@@ -249,7 +250,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='phone'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       联系电话
                     </FormLabel>
@@ -268,7 +269,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='email'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>邮箱</FormLabel>
                     <FormControl>
                       <Input
@@ -285,7 +286,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='deptCategory'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>
                       部门类别
                     </FormLabel>
@@ -304,7 +305,7 @@ export function DeptMutateDialog({
                 control={form.control}
                 name='status'
                 render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0'>
+                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-end'>状态</FormLabel>
                     <SelectDropdown
                       isControlled

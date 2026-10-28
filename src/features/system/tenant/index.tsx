@@ -1,5 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -12,11 +13,17 @@ import { TenantPrimaryButtons } from './components/tenant-primary-buttons'
 import { TenantProvider } from './components/tenant-provider'
 import { TenantTable } from './components/tenant-table'
 
-const route = getRouteApi('/_authenticated/system/tenants/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  companyName: z.string().optional().catch(''),
+  contactUserName: z.string().optional().catch(''),
+  status: z.array(z.string()).optional().catch([]),
+})
 
 export function TenantList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysTenantQuery = {
     pageNum: search.page ?? 1,

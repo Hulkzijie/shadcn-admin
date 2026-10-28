@@ -1,5 +1,6 @@
-import { getRouteApi } from '@tanstack/react-router'
+import z from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useRouteNavigate, useRouteSearch } from '@/hooks/use-route-search'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -16,11 +17,16 @@ import { DictDataPrimaryButtons } from './components/dict-data-primary-buttons'
 import { DictDataProvider } from './components/dict-data-provider'
 import { DictDataTable } from './components/dict-data-table'
 
-const route = getRouteApi('/_authenticated/system/dict/data/')
+const searchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+  dictLabel: z.string().optional().catch(''),
+  dictType: z.string().optional().catch(''),
+})
 
 export function DictDataList() {
-  const search = route.useSearch()
-  const navigate = route.useNavigate()
+  const search = useRouteSearch(searchSchema)
+  const navigate = useRouteNavigate()
 
   const params: SysDictDataQuery = {
     pageNum: search.page ?? 1,
