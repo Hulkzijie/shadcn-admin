@@ -6,6 +6,7 @@ import {
   Table2,
   ImageIcon,
   Trash2,
+  Workflow,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,7 @@ type KnowledgeBaseGridProps = {
   isError?: boolean
   onDelete: (item: KnowledgeBaseItem) => void
   onViewProgress: (item: KnowledgeBaseItem) => void
+  onOpenPipelines: () => void
 }
 
 const dataTypeIconMap: Record<KnowledgeDataType, typeof FileText> = {
@@ -49,6 +51,7 @@ export function KnowledgeBaseGrid({
   isError,
   onDelete,
   onViewProgress,
+  onOpenPipelines,
 }: KnowledgeBaseGridProps) {
   if (isLoading) {
     return (
@@ -140,18 +143,33 @@ export function KnowledgeBaseGrid({
               </div>
             </div>
 
-            <div className='border-t bg-muted/20 p-2'>
+            <div className='flex gap-1 border-t bg-muted/20 p-2'>
               <Button
                 variant='ghost'
                 size='sm'
-                className='h-10 w-full justify-between px-3 font-medium hover:bg-background hover:shadow-xs'
+                className='h-10 flex-1 justify-between px-3 font-medium hover:bg-background hover:shadow-xs'
                 onClick={() => onViewProgress(item)}
               >
                 <span className='flex items-center gap-2'>
                   <span className='flex size-6 items-center justify-center rounded-md bg-primary/8 text-primary'>
                     <Activity className='size-3.5' />
                   </span>
-                  查看入库进度
+                  入库进度
+                </span>
+                <ArrowRight className='size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5' />
+              </Button>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='h-10 flex-1 justify-between px-3 font-medium hover:bg-background hover:shadow-xs'
+                onClick={onOpenPipelines}
+                aria-label='查看入库编排'
+              >
+                <span className='flex items-center gap-2'>
+                  <span className='flex size-6 items-center justify-center rounded-md bg-primary/8 text-primary'>
+                    <Workflow className='size-3.5' />
+                  </span>
+                  入库编排
                 </span>
                 <ArrowRight className='size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5' />
               </Button>

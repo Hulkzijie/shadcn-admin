@@ -38,6 +38,7 @@ import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_a
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedErrorsErrorRouteImport } from './routes/_authenticated/errors/$error'
 import { Route as AuthenticatedBareAgentFlowRouteImport } from './routes/_authenticated-bare/agent/flow'
+import { Route as AuthenticatedBareKnowledgeBasePipelinesPipelineIdRouteImport } from './routes/_authenticated-bare/knowledge-base/pipelines/$pipelineId'
 import { Route as AuthenticatedBareAgentsAgentIdFlowRouteImport } from './routes/_authenticated-bare/agents/$agentId/flow'
 
 const ClerkRouteRoute = ClerkRouteRouteImport.update({
@@ -191,6 +192,12 @@ const AuthenticatedBareAgentFlowRoute =
     path: '/agent/flow',
     getParentRoute: () => AuthenticatedBareRouteRoute,
   } as any)
+const AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute =
+  AuthenticatedBareKnowledgeBasePipelinesPipelineIdRouteImport.update({
+    id: '/knowledge-base/pipelines/$pipelineId',
+    path: '/knowledge-base/pipelines/$pipelineId',
+    getParentRoute: () => AuthenticatedBareRouteRoute,
+  } as any)
 const AuthenticatedBareAgentsAgentIdFlowRoute =
   AuthenticatedBareAgentsAgentIdFlowRouteImport.update({
     id: '/agents/$agentId/flow',
@@ -225,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/agent/': typeof AuthenticatedBareAgentIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
+  '/knowledge-base/pipelines/$pipelineId': typeof AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
@@ -252,6 +260,7 @@ export interface FileRoutesByTo {
   '/agent': typeof AuthenticatedBareAgentIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
+  '/knowledge-base/pipelines/$pipelineId': typeof AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -285,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated-bare/agent/': typeof AuthenticatedBareAgentIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated-bare/agents/$agentId/flow': typeof AuthenticatedBareAgentsAgentIdFlowRoute
+  '/_authenticated-bare/knowledge-base/pipelines/$pipelineId': typeof AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/agent/'
     | '/settings/'
     | '/agents/$agentId/flow'
+    | '/knowledge-base/pipelines/$pipelineId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/settings'
     | '/agents/$agentId/flow'
+    | '/knowledge-base/pipelines/$pipelineId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -374,6 +386,7 @@ export interface FileRouteTypes {
     | '/_authenticated-bare/agent/'
     | '/_authenticated/settings/'
     | '/_authenticated-bare/agents/$agentId/flow'
+    | '/_authenticated-bare/knowledge-base/pipelines/$pipelineId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -597,6 +610,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBareAgentFlowRouteImport
       parentRoute: typeof AuthenticatedBareRouteRoute
     }
+    '/_authenticated-bare/knowledge-base/pipelines/$pipelineId': {
+      id: '/_authenticated-bare/knowledge-base/pipelines/$pipelineId'
+      path: '/knowledge-base/pipelines/$pipelineId'
+      fullPath: '/knowledge-base/pipelines/$pipelineId'
+      preLoaderRoute: typeof AuthenticatedBareKnowledgeBasePipelinesPipelineIdRouteImport
+      parentRoute: typeof AuthenticatedBareRouteRoute
+    }
     '/_authenticated-bare/agents/$agentId/flow': {
       id: '/_authenticated-bare/agents/$agentId/flow'
       path: '/agents/$agentId/flow'
@@ -651,6 +671,7 @@ interface AuthenticatedBareRouteRouteChildren {
   AuthenticatedBareAgentFlowRoute: typeof AuthenticatedBareAgentFlowRoute
   AuthenticatedBareAgentIndexRoute: typeof AuthenticatedBareAgentIndexRoute
   AuthenticatedBareAgentsAgentIdFlowRoute: typeof AuthenticatedBareAgentsAgentIdFlowRoute
+  AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute: typeof AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute
 }
 
 const AuthenticatedBareRouteRouteChildren: AuthenticatedBareRouteRouteChildren =
@@ -659,6 +680,8 @@ const AuthenticatedBareRouteRouteChildren: AuthenticatedBareRouteRouteChildren =
     AuthenticatedBareAgentIndexRoute: AuthenticatedBareAgentIndexRoute,
     AuthenticatedBareAgentsAgentIdFlowRoute:
       AuthenticatedBareAgentsAgentIdFlowRoute,
+    AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute:
+      AuthenticatedBareKnowledgeBasePipelinesPipelineIdRoute,
   }
 
 const AuthenticatedBareRouteRouteWithChildren =

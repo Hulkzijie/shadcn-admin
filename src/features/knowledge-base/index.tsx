@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -34,9 +35,11 @@ import {
   getIngestTasks,
   importFiles,
 } from './lib/knowledge-service'
+import { PipelineList } from './pipeline'
 
 export function KnowledgeBase() {
   const queryClient = useQueryClient()
+  const [tab, setTab] = useState<'bases' | 'pipelines'>('bases')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   // 当前查看入库进度的知识库
@@ -108,22 +111,47 @@ export function KnowledgeBase() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>知识库</h2>
             <p className='text-muted-foreground'>
-              创建并管理你的知识库，为智能应用提供数据支撑。
+              {tab === 'bases'
+                ? '创建并管理你的知识库，为智能应用提供数据支撑。'
+                : '维护入库编排模板，统一文件从接收到入库的处理链路。'}
             </p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className='size-4' />
-            创建知识库
-          </Button>
+          {tab === 'bases' && (
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className='size-4' />
+              创建知识库
+            </Button>
+          )}
         </div>
 
-        <KnowledgeBaseGrid
-          items={items}
-          isLoading={isPending}
-          isError={isError}
-          onDelete={setDeleteTarget}
-          onViewProgress={setProgressTarget}
-        />
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as 'bases' | 'pipelines')}
+          className='flex flex-1 flex-col gap-4 sm:gap-6'
+        >
+          <TabsList className='w-fit'>
+            <TabsTrigger value='bases'>知识库</TabsTrigger>
+            <TabsTrigger value='pipelines'>编排模板</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value='bases' className='flex flex-col gap-4 fade-in-0'>
+            <KnowledgeBaseGrid
+              items={items}
+              isLoading={isPending}
+              isError={isError}
+              onDelete={setDeleteTarget}
+              onViewProgress={setProgressTarget}
+              onOpenPipelines={() => setTab('pipelines')}
+            />
+          </TabsContent>
+
+          <TabsContent
+            value='pipelines'
+            className='flex flex-col gap-4 fade-in-0'
+          >
+            <PipelineList />
+          </TabsContent>
+        </Tabs>
       </Main>
 
       <CreateKnowledgeBaseDialog
