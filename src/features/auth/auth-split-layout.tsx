@@ -1,22 +1,20 @@
 import { Bot, Sparkles, Workflow } from 'lucide-react'
 import { Logo } from '@/assets/logo'
+import { Badge } from '@/components/ui/badge'
 import { AgentFlowDiagram } from './components/agent-flow-diagram'
 
 const features = [
   {
     icon: Bot,
     title: '多智能体协作',
-    desc: '多个 Agent 协同完成复杂任务',
   },
   {
     icon: Sparkles,
     title: '知识库增强',
-    desc: '基于私有知识库的精准检索',
   },
   {
     icon: Workflow,
     title: '自动化工作流',
-    desc: '可视化编排流程自动运行',
   },
 ]
 
@@ -35,8 +33,8 @@ export function AuthSplitLayout({
 }: AuthSplitLayoutProps) {
   return (
     <div className='grid min-h-svh w-full lg:h-svh lg:grid-cols-2'>
-      {/* 左侧品牌 & 产品叙事 */}
-      <div className='relative hidden overflow-hidden bg-[oklch(0.165_0.028_265)] lg:flex lg:flex-col lg:justify-between lg:p-12 [@media(max-height:820px)]:p-8'>
+      {/* 左侧品牌 & 产品叙事（常暗面板，使用 dark 作用域下的语义色） */}
+      <div className='dark relative hidden overflow-hidden bg-background text-foreground lg:flex lg:flex-col lg:p-12 [@media(max-height:820px)]:p-8'>
         {/* 背景：柔和径向高光 + 极淡网格 */}
         <div aria-hidden className='pointer-events-none absolute inset-0'>
           <div className='absolute inset-x-0 top-0 h-105 bg-[radial-gradient(70%_100%_at_50%_0%,rgba(110,86,207,0.20),transparent_70%)]' />
@@ -45,61 +43,64 @@ export function AuthSplitLayout({
           <div className='absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.045)_1px,transparent_1px)] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] bg-size-[56px_56px]' />
         </div>
 
-        <div className='relative z-10 flex shrink-0 items-center gap-2 text-white'>
-          <Logo className='size-7' />
-          <span className='text-lg font-semibold tracking-tight'>
-            WiseCloud AI
+        {/* 背景：Agent 编排链路动效，作为下半部视觉主体 */}
+        <div
+          aria-hidden
+          className='pointer-events-none absolute inset-0 overflow-hidden'
+        >
+          <AgentFlowDiagram className='absolute bottom-[6%] left-1/2 w-[88%] max-w-none -translate-x-1/2 mask-[radial-gradient(ellipse_at_50%_52%,black_52%,transparent_88%)] opacity-60 [@media(max-height:820px)]:bottom-[4%]' />
+        </div>
+
+        <div className='relative z-10 flex shrink-0 items-center justify-between gap-4'>
+          <div className='flex items-center gap-2'>
+            <Logo className='size-7' />
+            <span className='text-lg font-semibold tracking-tight'>
+              WiseCloud AI
+            </span>
+          </div>
+          <span className='text-xs text-muted-foreground/60'>
+            © {new Date().getFullYear()}
           </span>
         </div>
 
-        {/* 内容过高时（如 1280×720）在面板内滚动，避免与底部版权行重叠 */}
-        <div className='relative z-10 min-h-0 max-w-xl overflow-y-auto'>
-          <div className='space-y-6 [@media(max-height:820px)]:space-y-3'>
-            <div className='inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/4 px-3 py-1 text-xs text-[#b0b4ba] backdrop-blur'>
-              <span className='relative flex size-1.5'>
-                <span className='absolute inline-flex size-full animate-ping rounded-full bg-[#30a46c] opacity-75 motion-reduce:animate-none' />
-                <span className='relative inline-flex size-1.5 rounded-full bg-[#30a46c]' />
-              </span>
-              AI Agent 已就绪
-            </div>
+        <div className='relative z-10 mt-14 flex max-w-lg flex-col gap-7 [@media(max-height:820px)]:mt-8 [@media(max-height:820px)]:gap-4'>
+          <Badge
+            variant='outline'
+            className='w-fit gap-2 rounded-full border-border/70 bg-card/40 px-3 py-1 text-xs font-normal text-muted-foreground backdrop-blur'
+          >
+            <span className='relative flex size-1.5'>
+              <span className='absolute inline-flex size-full animate-ping rounded-full bg-[#30a46c] opacity-75 motion-reduce:animate-none' />
+              <span className='relative inline-flex size-1.5 rounded-full bg-[#30a46c]' />
+            </span>
+            AI Agent 已就绪
+          </Badge>
 
-            <h1 className='text-4xl leading-tight font-semibold tracking-tight text-balance text-[#eeeeef] [@media(max-height:820px)]:text-3xl'>
+          <div className='flex flex-col gap-4'>
+            <h1 className='text-4xl leading-tight font-semibold tracking-tight text-balance [@media(max-height:820px)]:text-3xl'>
               {headline}
               <br />
               <span className='bg-linear-to-r from-[#a48fff] to-[#6e56cf] bg-clip-text text-transparent'>
                 {highlight}
               </span>
             </h1>
-
-            <p className='text-sm leading-relaxed text-[#b0b4ba]'>
+            <p className='max-w-md text-sm leading-relaxed text-pretty text-muted-foreground'>
               {description}
             </p>
+          </div>
 
-            <AgentFlowDiagram className='py-1 [@media(max-height:820px)]:max-w-sm' />
-
-            <ul className='grid grid-cols-3 gap-x-5 gap-y-5 pt-1 [@media(max-height:820px)]:gap-y-3'>
-              {features.map((item) => (
-                <li key={item.title} className='flex flex-col gap-2'>
-                  <span className='flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/4 text-[#b0b4ba]'>
-                    <item.icon className='size-4' />
-                  </span>
-                  <div className='min-w-0'>
-                    <p className='text-sm font-medium text-[#eeeeef]'>
-                      {item.title}
-                    </p>
-                    <p className='mt-0.5 text-xs leading-relaxed text-[#8b8d98]'>
-                      {item.desc}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          <div className='flex flex-wrap gap-2'>
+            {features.map((item) => (
+              <Badge
+                key={item.title}
+                variant='outline'
+                className='gap-1.5 rounded-full border-border/70 bg-card/30 px-2.5 py-1 font-normal text-muted-foreground backdrop-blur'
+              >
+                <item.icon />
+                {item.title}
+              </Badge>
+            ))}
           </div>
         </div>
-
-        <p className='relative z-10 shrink-0 text-xs text-[#6f737b]'>
-          © {new Date().getFullYear()} WiseCloud AI · 智能体协作平台
-        </p>
       </div>
 
       {/* 右侧表单区 */}
