@@ -6,6 +6,8 @@ const dashboard: ComponentLoader = () =>
   import('@/features/dashboard').then((m) => ({ default: m.Dashboard }))
 const gis: ComponentLoader = () =>
   import('@/features/gis').then((m) => ({ default: m.GisPage }))
+const cad: ComponentLoader = () =>
+  import('@/features/cad').then((m) => ({ default: m.CadPage }))
 const agentList: ComponentLoader = () =>
   import('@/features/agent/list').then((m) => ({ default: m.AgentList }))
 const qa: ComponentLoader = () =>
@@ -70,6 +72,7 @@ const COMPONENT_LOADERS: Record<string, ComponentLoader> = {
   'agent/index': agentList,
   'agents/index': agentList,
   'gis/index': gis,
+  'cad/index': cad,
   'qa/index': qa,
   'ai-chat/index': aiChat,
   'app-plaza/index': appPlaza,
@@ -87,6 +90,7 @@ const COMPONENT_LOADERS: Record<string, ComponentLoader> = {
 const PATH_LOADERS: Record<string, ComponentLoader> = {
   '/': dashboard,
   '/gis': gis,
+  '/cad': cad,
   '/agents': agentList,
   '/qa': qa,
   '/ai-chat': aiChat,

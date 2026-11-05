@@ -7,74 +7,27 @@ import {
   setWorkerUrl,
   type GeoJSONSource,
   type MapMouseEvent,
-  type StyleSpecification,
 } from 'maplibre-gl'
 // maplibre-gl v6 把 worker 拆成了独立文件，经过打包器后无法自动定位；
 // 不显式指定会导致 worker 加载失败、load 事件不触发（地图一直停在加载中）
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { GisFeature, GisLayerVo, LayerExtent, Viewport } from '../types'
+import {
+  colorOf,
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+} from '../shared/style-tokens'
+import type {
+  GisFeature,
+  GisLayerVo,
+  LayerExtent,
+  Viewport,
+} from '../shared/types'
+import { BASE_STYLE } from './base-style'
 
 setWorkerUrl(maplibreWorkerUrl)
 
-const TILE_MAX_ZOOM = Number(import.meta.env.VITE_MAP_TILE_MAX_ZOOM ?? 18)
-
-/**
- * 底图样式：优先用完整 style.json，其次用瓦片模板拼一个纯栅格样式。
- * 我们的底图是自建瓦片服务（nginx 反代天地图 + 缓存），对外只暴露 {z}/{x}/{y}，
- * 前端不接触上游地址和 tk，换源只改服务端配置。
- */
-function buildBaseStyle(): string | StyleSpecification {
-  if (import.meta.env.VITE_MAP_STYLE_URL)
-    return import.meta.env.VITE_MAP_STYLE_URL
-
-  const raster = (id: string) => ({
-    id,
-    type: 'raster' as const,
-    source: id,
-    paint: { 'raster-resampling': 'linear' as const },
-  })
-  const sources: StyleSpecification['sources'] = {}
-  const layers: StyleSpecification['layers'] = []
-
-  const base = import.meta.env.VITE_MAP_TILE_URL
-  if (base) {
-    sources.base = {
-      type: 'raster',
-      tiles: [base],
-      tileSize: 256,
-      maxzoom: TILE_MAX_ZOOM,
-      attribution: import.meta.env.VITE_MAP_TILE_ATTRIBUTION ?? '© 天地图',
-    }
-    layers.push(raster('base'))
-  }
-  // 注记单独一层，避免文字被要素图层压住
-  const label = import.meta.env.VITE_MAP_LABEL_TILE_URL
-  if (label) {
-    sources.label = {
-      type: 'raster',
-      tiles: [label],
-      tileSize: 256,
-      maxzoom: TILE_MAX_ZOOM,
-    }
-    layers.push(raster('label'))
-  }
-
-  // 没配底图时返回空样式：点线面照常渲染，只是白底
-  return { version: 8, sources, layers }
-}
-
-const BASE_STYLE = buildBaseStyle()
-
-const COLOR_BY_TYPE: Record<string, string> = {
-  POINT: '#2563eb',
-  LINE: '#16a34a',
-  POLYGON: '#f59e0b',
-  HEAT: '#ef4444',
-  MIX: '#7c3aed',
-}
-
-interface GisMapProps {
+interface PreviewMapProps {
   layers: GisLayerVo[]
   visibleLayerIds: number[]
   data?: Record<string, GisFeature[]>
@@ -82,11 +35,12 @@ interface GisMapProps {
   initialView?: { lng: number; lat: number; zoom?: number | null } | null
   /** 传入后地图会自动缩放到该范围（每次点击定位都传新对象） */
   focusExtent?: LayerExtent | null
-  onViewportChange: (viewport: Viewport) => void
+  onViewportChange?: (viewport: Viewport) => void
   onFeatureClick?: (feature: GisFeature) => void
 }
 
-export function GisMap({
+/** 预览/方案展示：MapLibre 渲染矢量底图与业务图层 */
+export function PreviewMap({
   layers,
   visibleLayerIds,
   data,
@@ -94,7 +48,7 @@ export function GisMap({
   focusExtent,
   onViewportChange,
   onFeatureClick,
-}: GisMapProps) {
+}: PreviewMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<Map | null>(null)
   const [ready, setReady] = useState(false)
@@ -108,8 +62,8 @@ export function GisMap({
     const map = new Map({
       container: containerRef.current,
       style: BASE_STYLE,
-      center: [116.397, 39.909],
-      zoom: 10,
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
       attributionControl: false,
     })
     map.addControl(new NavigationControl(), 'bottom-right')
@@ -141,7 +95,7 @@ export function GisMap({
   // 3. 视窗变化 -> 通知外层（外层做防抖 + 发请求）
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready) return
+    if (!map || !ready || !onViewportChange) return
     const emit = () => {
       const b = map.getBounds()
       onViewportChange({
@@ -254,7 +208,7 @@ function toGeoJsonFeature(r: GisFeature): Feature {
 
 function upsertLayer(map: Map, layer: GisLayerVo, fc: FeatureCollection) {
   const src = sourceId(layer.id)
-  const color = COLOR_BY_TYPE[layer.layerType] ?? '#2563eb'
+  const color = colorOf(layer.layerType)
 
   const existing = map.getSource(src)
   if (existing) {

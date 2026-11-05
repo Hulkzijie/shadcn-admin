@@ -1,0 +1,36 @@
+/* CAD 图元随地图缩放同步放大/缩小：
+   由画布内核在 zoomend 时写入 --leaflet-marker-scale / --leaflet-line-width */
+.leaflet-scale-marker {
+  transform: scale(var(--leaflet-marker-scale, 1)) !important;
+  transform-origin: left top;
+  transition: transform 0.3s ease-out;
+}
+
+.leaflet-limit-scale-marker {
+  transform: scale(var(--leaflet-limit-marker-scale, 1)) !important;
+  transform-origin: left top;
+  transition: transform 0.3s ease-out;
+}
+
+.leaflet-scale-marker > div,
+.leaflet-limit-scale-marker > div {
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-scale-line {
+  stroke-width: var(--leaflet-line-width, 1) !important;
+}
+
+/* Leaflet 容器在 Tailwind preflight 之下需要显式背景与尺寸 */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #121c25;
+  font-family: inherit;
+}
+
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}

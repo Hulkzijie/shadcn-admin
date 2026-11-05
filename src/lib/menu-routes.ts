@@ -26,6 +26,7 @@ const COMPONENT_PATHS: Record<string, string> = {
   index: '/',
   'dashboard/index': '/',
   'gis/index': '/gis',
+  'cad/index': '/cad',
   'agent/index': '/agents',
   'agents/index': '/agents',
   'qa/index': '/qa',

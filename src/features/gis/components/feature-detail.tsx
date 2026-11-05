@@ -1,21 +1,27 @@
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import type { GisFeature, GisLayerVo } from '../types'
+import type { GisFeature, GisLayerVo } from '../shared/types'
 
 interface FeatureDetailProps {
   feature: GisFeature | null
   layers: GisLayerVo[]
   onClose: () => void
+  /** 传入后显示删除按钮（编辑模式） */
+  onDelete?: () => void
 }
 
 export function FeatureDetail({
   feature,
   layers,
   onClose,
+  onDelete,
 }: FeatureDetailProps) {
   if (!feature) return null
 
@@ -46,6 +52,14 @@ export function FeatureDetail({
               <Field key={key} label={key} value={formatValue(value)} />
             ))}
         </dl>
+        {onDelete && (
+          <DialogFooter>
+            <Button variant='destructive' size='sm' onClick={onDelete}>
+              <Trash2 className='size-3.5' />
+              删除要素
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { LocateFixed } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { GisLayerVo } from '../types'
+import type { GisLayerVo } from '../shared/types'
 
 interface LayerTreeProps {
   layers: GisLayerVo[]
