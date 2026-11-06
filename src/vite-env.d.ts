@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_FASTAPI_API?: string
   /** 请求超时时间（毫秒），默认 30000 */
   readonly VITE_API_TIMEOUT?: string
+  /** FastAPI 内网接口令牌（X-Internal-Token），未配置时后端按本地开发模式放行 */
+  readonly VITE_INTERNAL_TOKEN?: string
 
   // ===== RuoYi-Vue-Plus 后端配置 =====
   /** 接口加密开关 */

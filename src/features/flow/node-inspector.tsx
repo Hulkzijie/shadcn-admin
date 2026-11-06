@@ -13,19 +13,16 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import type {
-  ConfigFieldSchema,
-  FlowNodeDataBase,
-  NodeKindMeta,
-} from './types'
+import type { ConfigFieldSchema, FlowNodeDataBase, NodeKindMeta } from './types'
 
 type FieldProps = {
   field: ConfigFieldSchema
   value: unknown
   onChange: (value: unknown) => void
+  disabled?: boolean
 }
 
-function ConfigField({ field, value, onChange }: FieldProps) {
+function ConfigField({ field, value, onChange, disabled }: FieldProps) {
   const id = `node-config-${field.key}`
 
   if (field.type === 'switch') {
@@ -42,6 +39,7 @@ function ConfigField({ field, value, onChange }: FieldProps) {
         <Switch
           id={id}
           checked={value === true}
+          disabled={disabled}
           onCheckedChange={(checked) => onChange(checked)}
         />
       </div>
@@ -56,6 +54,7 @@ function ConfigField({ field, value, onChange }: FieldProps) {
           id={id}
           value={typeof value === 'string' ? value : ''}
           placeholder={field.placeholder}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
         />
       ) : null}
@@ -66,6 +65,7 @@ function ConfigField({ field, value, onChange }: FieldProps) {
           placeholder={field.placeholder}
           rows={field.rows ?? 3}
           className='resize-none'
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
         />
       ) : null}
@@ -81,6 +81,7 @@ function ConfigField({ field, value, onChange }: FieldProps) {
             max={field.max}
             step={field.step}
             className={field.unit ? 'pe-12' : undefined}
+            disabled={disabled}
             onChange={(event) => {
               const next = event.target.value
               onChange(next === '' ? '' : Number(next))
@@ -96,10 +97,13 @@ function ConfigField({ field, value, onChange }: FieldProps) {
       {field.type === 'select' ? (
         <Select
           value={typeof value === 'string' ? value : ''}
+          disabled={disabled}
           onValueChange={(next) => onChange(next)}
         >
           <SelectTrigger id={id} className='w-full'>
-            <SelectValue placeholder={field.placeholder ?? `选择${field.label}`} />
+            <SelectValue
+              placeholder={field.placeholder ?? `选择${field.label}`}
+            />
           </SelectTrigger>
           <SelectContent>
             {field.options.map((option) => (
@@ -111,7 +115,9 @@ function ConfigField({ field, value, onChange }: FieldProps) {
         </Select>
       ) : null}
       {field.hint ? (
-        <p className='text-xs text-pretty text-muted-foreground'>{field.hint}</p>
+        <p className='text-xs text-pretty text-muted-foreground'>
+          {field.hint}
+        </p>
       ) : null}
     </div>
   )
@@ -126,6 +132,8 @@ export type NodeInspectorProps = {
   onConfigChange: (key: string, value: unknown) => void
   onDelete: () => void
   onClose: () => void
+  /** 只读态：禁用所有输入并隐藏删除入口。 */
+  readOnly?: boolean
   /** 业务自定义的扩展配置区块（如失败策略、重试）。 */
   extras?: ReactNode
   className?: string
@@ -140,6 +148,7 @@ export function NodeInspector({
   onConfigChange,
   onDelete,
   onClose,
+  readOnly,
   extras,
   className,
 }: NodeInspectorProps) {
@@ -157,7 +166,9 @@ export function NodeInspector({
         <div>
           <p className='text-sm font-medium'>未选中节点</p>
           <p className='mt-1 text-xs text-pretty text-muted-foreground'>
-            在画布中点击节点，即可在这里编辑名称、说明与参数。
+            {readOnly
+              ? '在画布中点击节点，即可查看它的参数配置。'
+              : '在画布中点击节点，即可在这里编辑名称、说明与参数。'}
           </p>
         </div>
       </div>
@@ -203,6 +214,7 @@ export function NodeInspector({
             <Input
               id='node-label'
               value={node.data.label}
+              disabled={readOnly}
               onChange={(event) => onUpdate({ label: event.target.value })}
               placeholder='给这个节点起个名字'
             />
@@ -212,7 +224,10 @@ export function NodeInspector({
             <Textarea
               id='node-description'
               value={node.data.description}
-              onChange={(event) => onUpdate({ description: event.target.value })}
+              disabled={readOnly}
+              onChange={(event) =>
+                onUpdate({ description: event.target.value })
+              }
               placeholder='描述这个节点负责什么'
               className='min-h-20 resize-none'
             />
@@ -229,6 +244,7 @@ export function NodeInspector({
                 key={field.key}
                 field={field}
                 value={config[field.key]}
+                disabled={readOnly}
                 onChange={(value) => onConfigChange(field.key, value)}
               />
             ))}
@@ -246,15 +262,21 @@ export function NodeInspector({
       </div>
 
       <footer className='border-t p-3'>
-        <Button
-          type='button'
-          variant='outline'
-          className='w-full text-destructive hover:text-destructive'
-          onClick={onDelete}
-        >
-          <Trash2 aria-hidden='true' />
-          删除节点
-        </Button>
+        {readOnly ? (
+          <p className='text-center text-xs text-muted-foreground'>
+            只读模式，无法修改该编排
+          </p>
+        ) : (
+          <Button
+            type='button'
+            variant='outline'
+            className='w-full text-destructive hover:text-destructive'
+            onClick={onDelete}
+          >
+            <Trash2 aria-hidden='true' />
+            删除节点
+          </Button>
+        )}
       </footer>
     </div>
   )

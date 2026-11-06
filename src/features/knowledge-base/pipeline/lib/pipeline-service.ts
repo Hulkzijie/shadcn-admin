@@ -4,7 +4,10 @@ import {
   dataTypeOptions,
   type KnowledgeDataType,
 } from '../../data/knowledge-types'
-import { createIngestNodeData, isIngestNodeKind } from '../data/ingest-node-registry'
+import {
+  createIngestNodeData,
+  isIngestNodeKind,
+} from '../data/ingest-node-registry'
 import {
   FAIL_POLICY_LABELS,
   type IngestNodeData,
@@ -12,6 +15,7 @@ import {
   type PipelineDsl,
   type PipelineStatus,
   type PipelineTemplate,
+  type PipelineVersion,
   type RetryPolicy,
 } from '../data/pipeline-types'
 
@@ -150,11 +154,7 @@ function buildDefaultDsl(dataType: KnowledgeDataType): PipelineDsl {
 function normalizeRetry(value: unknown, base: RetryPolicy): RetryPolicy {
   if (!isRecord(value)) return { ...base }
   return {
-    maxAttempts: clamp(
-      toNumber(value.maxAttempts, base.maxAttempts),
-      0,
-      5
-    ),
+    maxAttempts: clamp(toNumber(value.maxAttempts, base.maxAttempts), 0, 5),
     intervalMs: Math.max(0, toNumber(value.intervalMs, base.intervalMs)),
     backoff: value.backoff === 'exponential' ? 'exponential' : 'fixed',
     timeoutMs: Math.max(0, toNumber(value.timeoutMs, base.timeoutMs)),
@@ -235,6 +235,24 @@ function normalizeDsl(value: unknown): PipelineDsl {
   }
 }
 
+function normalizeVersions(value: unknown): PipelineVersion[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .flatMap((item) => {
+      if (!isRecord(item)) return []
+      const version = toNumber(item.version, 0)
+      if (version <= 0) return []
+      return [
+        {
+          version,
+          dsl: normalizeDsl(item.dsl),
+          publishedAt: toNumber(item.publishedAt, 0),
+        },
+      ]
+    })
+    .sort((a, b) => a.version - b.version)
+}
+
 const DATA_TYPES = new Set<KnowledgeDataType>(
   dataTypeOptions.map((option) => option.value)
 )
@@ -248,6 +266,14 @@ function normalizePipeline(value: unknown): PipelineTemplate | null {
   const dataType = DATA_TYPES.has(value.dataType as KnowledgeDataType)
     ? (value.dataType as KnowledgeDataType)
     : 'unstructured'
+  const dsl = normalizeDsl(value.dsl)
+  const latestVersion = Math.max(0, toNumber(value.latestVersion, 0))
+  const updatedAt = toNumber(value.updatedAt, createdAt)
+  const versions = normalizeVersions(value.versions)
+  // 兼容旧数据：有版本号但没存快照时，以当前 DSL 补齐一份
+  if (versions.length === 0 && latestVersion > 0) {
+    versions.push({ version: latestVersion, dsl, publishedAt: updatedAt })
+  }
 
   return {
     id: value.id,
@@ -262,12 +288,15 @@ function normalizePipeline(value: unknown): PipelineTemplate | null {
     status: STATUSES.has(value.status as PipelineStatus)
       ? (value.status as PipelineStatus)
       : 'draft',
-    latestVersion: Math.max(0, toNumber(value.latestVersion, 0)),
+    latestVersion,
     publishedVersion:
-      typeof value.publishedVersion === 'number' ? value.publishedVersion : null,
-    dsl: normalizeDsl(value.dsl),
+      typeof value.publishedVersion === 'number'
+        ? value.publishedVersion
+        : null,
+    versions,
+    dsl,
     createdAt,
-    updatedAt: toNumber(value.updatedAt, createdAt),
+    updatedAt,
   }
 }
 
@@ -293,25 +322,27 @@ function seedDefaultPipelines() {
   if (localStorage.getItem(PIPELINES_STORAGE_KEY) !== null) return
 
   const now = Date.now()
-  const seeded = (
-    Object.keys(TEMPLATE_PRESETS) as KnowledgeDataType[]
-  ).map((dataType) => {
-    const preset = TEMPLATE_PRESETS[dataType]
-    return {
-      id: preset.id,
-      tenantId: 'default',
-      name: preset.name,
-      description: preset.description,
-      scope: 'system' as const,
-      dataType,
-      status: 'published' as const,
-      latestVersion: 1,
-      publishedVersion: 1,
-      dsl: buildDefaultDsl(dataType),
-      createdAt: now,
-      updatedAt: now,
+  const seeded = (Object.keys(TEMPLATE_PRESETS) as KnowledgeDataType[]).map(
+    (dataType) => {
+      const preset = TEMPLATE_PRESETS[dataType]
+      const dsl = buildDefaultDsl(dataType)
+      return {
+        id: preset.id,
+        tenantId: 'default',
+        name: preset.name,
+        description: preset.description,
+        scope: 'system' as const,
+        dataType,
+        status: 'published' as const,
+        latestVersion: 1,
+        publishedVersion: 1,
+        versions: [{ version: 1, dsl, publishedAt: now }],
+        dsl,
+        createdAt: now,
+        updatedAt: now,
+      }
     }
-  })
+  )
 
   writePipelines(seeded)
 }
@@ -361,6 +392,7 @@ export function createPipeline(input: {
     status: 'draft',
     latestVersion: 0,
     publishedVersion: null,
+    versions: [],
     dsl: buildDefaultDsl(input.dataType),
     createdAt: now,
     updatedAt: now,
@@ -396,12 +428,17 @@ export function publishPipeline(id: string): PipelineTemplate | undefined {
   const pipelines = readPipelines().map((pipeline) => {
     if (pipeline.id !== id) return pipeline
     const nextVersion = pipeline.latestVersion + 1
+    const now = Date.now()
     updated = {
       ...pipeline,
       status: 'published',
       latestVersion: nextVersion,
       publishedVersion: nextVersion,
-      updatedAt: Date.now(),
+      versions: [
+        ...pipeline.versions,
+        { version: nextVersion, dsl: pipeline.dsl, publishedAt: now },
+      ],
+      updatedAt: now,
     }
     return updated
   })
@@ -423,6 +460,7 @@ export function duplicatePipeline(id: string): PipelineTemplate | undefined {
     status: 'draft',
     latestVersion: 0,
     publishedVersion: null,
+    versions: [],
     dsl: structuredClone(source.dsl),
     createdAt: now,
     updatedAt: now,

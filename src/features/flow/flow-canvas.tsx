@@ -84,6 +84,13 @@ const defaultEdgeOptions = {
   style: { strokeWidth: 1.5 },
 } as const
 
+/** 头部操作区可拿到的画布快照（含未保存改动）。 */
+export type FlowHeaderContext<TData extends FlowNodeDataBase> = {
+  dsl: FlowDsl<TData>
+  dirty: boolean
+  readOnly: boolean
+}
+
 export type FlowCanvasProps<
   TKind extends string,
   TData extends FlowNodeDataBase,
@@ -100,13 +107,18 @@ export type FlowCanvasProps<
   validate?: (dsl: FlowDsl<TData>) => FlowValidationIssue[]
   /** 发布当前已保存的内容；配置后画布会在校验通过且无未保存改动时触发。 */
   onPublish?: (dsl: FlowDsl<TData>) => void
-  /** 头部操作区，例如「发布」。 */
-  headerActions?: ReactNode
+  /**
+   * 头部操作区，例如「发布」。
+   * 传入函数时可拿到画布当前的 DSL 快照，用于试运行等需要实时编排的动作。
+   */
+  headerActions?: ReactNode | ((context: FlowHeaderContext<TData>) => ReactNode)
   /** 配置面板里的业务扩展区块。 */
   renderInspectorExtras?: (
     node: FlowNode<TData>,
     update: (patch: Partial<TData>) => void
   ) => ReactNode
+  /** 只读态：禁止拖动、连线、增删节点，并隐藏保存与发布入口。 */
+  readOnly?: boolean
 }
 
 function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
@@ -122,6 +134,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
   onPublish,
   headerActions,
   renderInspectorExtras,
+  readOnly = false,
 }: FlowCanvasProps<TKind, TData>) {
   const { resolvedTheme } = useTheme()
   const { fitView, screenToFlowPosition, getNode, getNodes, getEdges } =
@@ -173,6 +186,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
   }
 
   const addNode = (kind: string, position?: { x: number; y: number }) => {
+    if (readOnly) return
     const meta = runtime.meta[kind]
     if (!meta) return
 
@@ -205,6 +219,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
 
   const addNextNode = useCallback(
     (sourceNodeId: string, kind: string) => {
+      if (readOnly) return
       const sourceNode = getNode(sourceNodeId)
       const meta = runtime.meta[kind]
       if (!sourceNode || !meta) return
@@ -261,12 +276,16 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
       )
       setDirty(true)
     },
-    [getEdges, getNode, getNodes, runtime, setEdges, setNodes]
+    [getEdges, getNode, getNodes, readOnly, runtime, setEdges, setNodes]
   )
 
-  const flowActions = useMemo(() => ({ addNextNode }), [addNextNode])
+  const flowActions = useMemo(
+    () => ({ addNextNode, readOnly }),
+    [addNextNode, readOnly]
+  )
 
   const onConnect = (connection: Connection) => {
+    if (readOnly) return
     setEdges((current) =>
       addEdge(
         {
@@ -281,11 +300,13 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
   }
 
   const onDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (readOnly) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }
 
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (readOnly) return
     event.preventDefault()
     const kind = event.dataTransfer.getData(runtime.dragMime)
     if (!runtime.isKind(kind)) return
@@ -391,13 +412,19 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
     ? runtime.getConfig(selectedNode.data as FlowNodeDataBase)
     : {}
   const inspectorExtras =
-    selectedNode && renderInspectorExtras
+    selectedNode && renderInspectorExtras && !readOnly
       ? renderInspectorExtras(selectedNode, updateSelectedNode)
       : null
 
   const errorCount =
     issues?.filter((issue) => issue.level === 'error').length ?? 0
   const warningCount = issues?.length ? issues.length - errorCount : 0
+
+  const headerContext: FlowHeaderContext<TData> = {
+    dsl: { nodes, edges },
+    dirty,
+    readOnly,
+  }
 
   return (
     <div className='flex h-svh w-full min-w-0 touch-manipulation flex-col overflow-hidden bg-background'>
@@ -419,9 +446,13 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
         <div className='min-w-0 flex-1'>
           <div className='flex items-center gap-2'>
             <h1 className='truncate text-sm font-semibold'>{title}</h1>
-            <Badge variant={dirty ? 'secondary' : 'outline'}>
-              {dirty ? '未保存' : '已保存'}
-            </Badge>
+            {readOnly ? (
+              <Badge variant='outline'>只读</Badge>
+            ) : (
+              <Badge variant={dirty ? 'secondary' : 'outline'}>
+                {dirty ? '未保存' : '已保存'}
+              </Badge>
+            )}
           </div>
           <p className='truncate text-xs text-muted-foreground'>
             {subtitle ?? '拖拽节点、连接流程，保存后写入编排'}
@@ -429,7 +460,9 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
         </div>
 
         <div className='flex shrink-0 items-center gap-1'>
-          {headerActions}
+          {typeof headerActions === 'function'
+            ? headerActions(headerContext)
+            : headerActions}
           {validate ? (
             <Button
               type='button'
@@ -446,16 +479,18 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
             <ThemeSwitch />
             <ConfigDrawer />
           </div>
-          <Button
-            type='button'
-            size='sm'
-            onClick={saveFlow}
-            className='ms-1 px-2 sm:px-3'
-          >
-            <Save className='size-4' aria-hidden='true' />
-            <span className='hidden sm:inline'>保存</span>
-          </Button>
-          {onPublish ? (
+          {readOnly ? null : (
+            <Button
+              type='button'
+              size='sm'
+              onClick={saveFlow}
+              className='ms-1 px-2 sm:px-3'
+            >
+              <Save className='size-4' aria-hidden='true' />
+              <span className='hidden sm:inline'>保存</span>
+            </Button>
+          )}
+          {onPublish && !readOnly ? (
             <Button
               type='button'
               variant='outline'
@@ -471,7 +506,9 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
       </header>
 
       <div className='flex min-h-0 flex-1 flex-col lg:flex-row'>
-        <NodePalette registry={runtime} onAdd={(kind) => addNode(kind)} />
+        {readOnly ? null : (
+          <NodePalette registry={runtime} onAdd={(kind) => addNode(kind)} />
+        )}
 
         <div className='flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row'>
           <div
@@ -497,8 +534,11 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
                   maxZoom={1.6}
                   snapToGrid
                   snapGrid={[16, 16]}
-                  deleteKeyCode={['Backspace', 'Delete']}
+                  nodesDraggable={!readOnly}
+                  nodesConnectable={!readOnly}
+                  edgesFocusable={!readOnly}
                   connectionLineStyle={{ strokeWidth: 1.5 }}
+                  deleteKeyCode={readOnly ? null : ['Backspace', 'Delete']}
                   className='touch-manipulation'
                 >
                   <Background
@@ -522,7 +562,9 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
                       {nodes.length} 个节点 · {edges.length} 条连线
                     </p>
                     <p className='mt-0.5 hidden text-xs text-muted-foreground sm:block'>
-                      点击节点右侧 + 号添加下一个节点；Delete 可删除选中项
+                      {readOnly
+                        ? '只读模式：可查看节点参数，无法修改编排'
+                        : '点击节点右侧 + 号添加下一个节点；Delete 可删除选中项'}
                     </p>
                   </Panel>
                   <Panel position='top-right'>
@@ -566,6 +608,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
               onConfigChange={handleConfigChange}
               onDelete={deleteSelectedNode}
               onClose={deselectNode}
+              readOnly={readOnly}
               extras={inspectorExtras}
             />
           </aside>
@@ -587,6 +630,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
             onConfigChange={handleConfigChange}
             onDelete={deleteSelectedNode}
             onClose={() => setMobileConfigOpen(false)}
+            readOnly={readOnly}
             extras={inspectorExtras}
           />
         </SheetContent>

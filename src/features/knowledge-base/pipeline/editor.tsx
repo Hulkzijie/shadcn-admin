@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, Copy, History } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { FlowCanvas } from '@/features/flow'
 import { dataTypeOptions } from '../data/knowledge-types'
+import { DryRunButton } from './components/dry-run-panel'
 import { INGEST_FLOW_REGISTRY } from './data/ingest-node-registry'
 import {
   FAIL_POLICY_OPTIONS,
@@ -24,16 +25,22 @@ import {
   type PipelineTemplate,
 } from './data/pipeline-types'
 import {
+  duplicatePipeline,
   getPipeline,
   publishPipeline,
   savePipelineDsl,
 } from './lib/pipeline-service'
 import { validatePipeline } from './lib/validate-pipeline'
 
+/** 版本下拉里代表「当前草稿」的哨兵值。 */
+const CURRENT_VERSION = 'current'
+
 export function PipelineEditor({ pipelineId }: { pipelineId: string }) {
+  const navigate = useNavigate()
   const [pipeline, setPipeline] = useState<PipelineTemplate | undefined>(() =>
     getPipeline(pipelineId)
   )
+  const [previewVersion, setPreviewVersion] = useState<number | null>(null)
 
   if (!pipeline) {
     return (
@@ -54,6 +61,13 @@ export function PipelineEditor({ pipelineId }: { pipelineId: string }) {
   const dataTypeLabel =
     dataTypeOptions.find((option) => option.value === pipeline.dataType)
       ?.label ?? pipeline.dataType
+  // 系统模板只读，历史版本预览同样只读。
+  const isSystem = pipeline.scope === 'system'
+  const previewing = previewVersion !== null
+  const readOnly = isSystem || previewing
+  const activeVersion = previewing
+    ? pipeline.versions.find((item) => item.version === previewVersion)
+    : undefined
 
   const handleSave = (dsl: PipelineDsl) => {
     const next = savePipelineDsl(pipelineId, dsl)
@@ -69,22 +83,104 @@ export function PipelineEditor({ pipelineId }: { pipelineId: string }) {
       return
     }
     setPipeline(next)
+    setPreviewVersion(null)
     toast.success(`已发布 v${next.latestVersion}`, {
       description: '发布基于最近一次保存的内容。',
     })
   }
 
+  const handleDuplicate = () => {
+    const copy = duplicatePipeline(pipelineId)
+    if (!copy) {
+      toast.error('创建副本失败', { description: '该编排可能已被删除' })
+      return
+    }
+    toast.success('已生成副本', {
+      description: `${copy.name} 未绑定知识库，可直接编辑后发布。`,
+    })
+    void navigate({
+      to: '/knowledge-base/pipelines/$pipelineId',
+      params: { pipelineId: copy.id },
+    })
+  }
+
+  const versionSelect = (
+    <div className='flex items-center gap-1.5'>
+      <History
+        className='size-4 shrink-0 text-muted-foreground'
+        aria-hidden='true'
+      />
+      <Select
+        value={previewing ? String(previewVersion) : CURRENT_VERSION}
+        disabled={pipeline.versions.length === 0}
+        onValueChange={(value) =>
+          setPreviewVersion(value === CURRENT_VERSION ? null : Number(value))
+        }
+      >
+        <SelectTrigger
+          size='sm'
+          className='w-32 sm:w-40'
+          aria-label='查看历史版本'
+        >
+          <SelectValue placeholder='暂无版本' />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={CURRENT_VERSION}>
+            {isSystem ? '系统模板 v' : '当前草稿'}
+            {isSystem ? pipeline.latestVersion : ''}
+          </SelectItem>
+          {[...pipeline.versions].reverse().map((version) => (
+            <SelectItem key={version.version} value={String(version.version)}>
+              v{version.version}
+              {version.version === pipeline.publishedVersion
+                ? '（已发布）'
+                : ''}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+
   return (
     <FlowCanvas
+      key={`${pipeline.id}-${previewVersion ?? CURRENT_VERSION}`}
       title={pipeline.name}
-      subtitle={`${dataTypeLabel} · v${pipeline.latestVersion} 已发布 / 最近保存`}
+      subtitle={
+        previewing
+          ? `正在预览历史版本 v${previewVersion}，切换到「${isSystem ? '系统模板' : '当前草稿'}」可返回`
+          : `${dataTypeLabel} · ${isSystem ? '系统模板' : '本知识库编排'} · v${pipeline.latestVersion}`
+      }
       backTo='/knowledge-base'
       backLabel='返回知识库'
       registry={INGEST_FLOW_REGISTRY}
-      initialDsl={pipeline.dsl}
+      initialDsl={activeVersion?.dsl ?? pipeline.dsl}
+      readOnly={readOnly}
       onSave={handleSave}
       validate={validatePipeline}
       onPublish={handlePublish}
+      headerActions={({ dsl }) => (
+        <>
+          {versionSelect}
+          <DryRunButton
+            pipelineId={pipeline.id}
+            dsl={dsl}
+            dataType={pipeline.dataType}
+          />
+          {isSystem ? (
+            <Button
+              type='button'
+              size='sm'
+              variant='outline'
+              onClick={handleDuplicate}
+              className='px-2 sm:px-3'
+            >
+              <Copy className='size-4' aria-hidden='true' />
+              <span className='hidden sm:inline'>基于此模板创建</span>
+            </Button>
+          ) : null}
+        </>
+      )}
       renderInspectorExtras={(node, update) => (
         <RetrySection data={node.data} update={update} />
       )}

@@ -1,4 +1,8 @@
-export { FlowCanvas, type FlowCanvasProps } from './flow-canvas'
+export {
+  FlowCanvas,
+  type FlowCanvasProps,
+  type FlowHeaderContext,
+} from './flow-canvas'
 export { NodePalette } from './node-palette'
 export { NodeInspector, type NodeInspectorProps } from './node-inspector'
 export {

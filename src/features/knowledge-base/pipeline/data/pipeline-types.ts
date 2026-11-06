@@ -66,6 +66,13 @@ export type PipelineDsl = FlowDsl<IngestNodeData>
 export type PipelineScope = 'system' | 'tenant'
 export type PipelineStatus = 'draft' | 'published' | 'archived'
 
+/** 发布后固化的不可变版本快照，用于版本历史查看与回滚。 */
+export type PipelineVersion = {
+  version: number
+  dsl: PipelineDsl
+  publishedAt: number
+}
+
 export type PipelineTemplate = {
   id: string
   tenantId: string
@@ -76,6 +83,8 @@ export type PipelineTemplate = {
   status: PipelineStatus
   latestVersion: number
   publishedVersion: number | null
+  /** 历史发布版本，按版本号升序；最后一个即 publishedVersion。 */
+  versions: PipelineVersion[]
   dsl: PipelineDsl
   createdAt: number
   updatedAt: number

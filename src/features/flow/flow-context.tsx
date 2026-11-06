@@ -69,6 +69,8 @@ export function useFlowRegistry() {
 export type FlowActions = {
   /** 在指定节点右侧新建下一个节点，并自动连线。 */
   addNextNode: (sourceNodeId: string, kind: string) => void
+  /** 只读态下隐藏节点上的「添加下一个节点」入口。 */
+  readOnly?: boolean
 }
 
 const FlowActionsContext = createContext<FlowActions | null>(null)

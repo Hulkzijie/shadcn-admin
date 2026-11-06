@@ -15,8 +15,10 @@ import type { FlowNodeDataBase } from './types'
 const stop = (event: MouseEvent) => event.stopPropagation()
 
 function NodeAddButton({ nodeId }: { nodeId: string }) {
-  const { addNextNode } = useFlowActions()
+  const { addNextNode, readOnly } = useFlowActions()
   const registry = useFlowRegistry()
+
+  if (readOnly) return null
 
   return (
     <div className='nodrag nopan absolute top-1/2 -right-5 -translate-y-1/2'>
