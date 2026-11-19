@@ -102,11 +102,11 @@ export type FlowCanvasProps<
   headerIcon?: LucideIcon
   registry: FlowRegistry<TKind, TData>
   initialDsl: FlowDsl<TData>
-  /** 返回 false 表示保存失败。 */
-  onSave: (dsl: FlowDsl<TData>) => boolean
+  /** 返回 false 表示保存失败，支持 async。 */
+  onSave: (dsl: FlowDsl<TData>) => boolean | Promise<boolean>
   validate?: (dsl: FlowDsl<TData>) => FlowValidationIssue[]
   /** 发布当前已保存的内容；配置后画布会在校验通过且无未保存改动时触发。 */
-  onPublish?: (dsl: FlowDsl<TData>) => void
+  onPublish?: (dsl: FlowDsl<TData>) => void | Promise<void>
   /**
    * 头部操作区，例如「发布」。
    * 传入函数时可拿到画布当前的 DSL 快照，用于试运行等需要实时编排的动作。
@@ -362,20 +362,24 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
     setIssues(validate({ nodes, edges }))
   }
 
-  const saveFlow = () => {
-    const saved = onSave({ nodes, edges })
-    if (!saved) {
-      toast.error('保存失败', { description: '该编排可能已被删除' })
-      return
+  const saveFlow = async () => {
+    try {
+      const saved = await onSave({ nodes, edges })
+      if (!saved) {
+        toast.error('保存失败', { description: '该编排可能已被删除' })
+        return
+      }
+      setDirty(false)
+      toast.success('编排已保存', {
+        description: `${nodes.length} 个节点，${edges.length} 条连线`,
+      })
+    } catch {
+      toast.error('保存失败', { description: '网络或服务端错误' })
     }
-    setDirty(false)
-    toast.success('编排已保存', {
-      description: `${nodes.length} 个节点，${edges.length} 条连线`,
-    })
   }
 
   /** 发布前先跑强校验，阻断项未清零或存在未保存改动时不放行。 */
-  const publishFlow = () => {
+  const publishFlow = async () => {
     if (!onPublish) return
     if (dirty) {
       toast.error('请先保存草稿再发布', {
@@ -391,7 +395,7 @@ function FlowCanvasInner<TKind extends string, TData extends FlowNodeDataBase>({
       })
       return
     }
-    onPublish({ nodes, edges })
+    await onPublish({ nodes, edges })
   }
 
   const inspectorNode = selectedNode

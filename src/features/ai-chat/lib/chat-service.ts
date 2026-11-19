@@ -1,5 +1,4 @@
 import { useAuthStore } from '@/stores/auth-store'
-import { fastapiClient } from '@/lib/api/fastapi-client'
 import type {
   ChatMessage,
   ChatRole,
@@ -8,32 +7,101 @@ import type {
   CreateConversationResponse,
 } from '../data/chat-types'
 
-/** 创建一个持久化会话。会话 ID 必须由后端生成，不能使用前端自增 ID。 */
+/**
+ * 会话服务：对接 Java 桥接的 `/ai/chat/stream`（SSE 透传 Python 智能面）。
+ *
+ * 后端当前只提供流式对话与知识库接口，没有会话/消息的增删查 API，
+ * 因此会话列表与历史消息暂存在浏览器本地（按登录用户隔离），
+ * `conversation_id` 直接作为 Python checkpointer 的 `sessionId`，保证多轮上下文连续。
+ */
+
+/** 与 axios 客户端保持一致，缺失会被后端鉴权拦截 */
+const CLIENT_ID =
+  import.meta.env.VITE_APP_CLIENT_ID ?? 'e5cd7e4891bf95d1d19206ce24a7b32e'
+
+const STORAGE_PREFIX = 'wisecloud:ai-chat:v1'
+
+type StoredMessage = {
+  id: string
+  role: ChatRole
+  content: string
+  createdAt: string
+}
+
+type StoredConversation = {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messages: StoredMessage[]
+}
+
+function storageKey(): string {
+  const userId = useAuthStore.getState().auth.user?.userId
+  return `${STORAGE_PREFIX}:${userId ?? 'anonymous'}`
+}
+
+function readAll(): StoredConversation[] {
+  try {
+    const raw = localStorage.getItem(storageKey())
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as StoredConversation[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeAll(conversations: StoredConversation[]): void {
+  localStorage.setItem(storageKey(), JSON.stringify(conversations))
+}
+
+/** 创建一个持久化会话，返回的 ID 同时用作 checkpointer 的 thread_id。 */
 export async function createConversation(
   title?: string
 ): Promise<CreateConversationResponse> {
-  const { data } = await fastapiClient.post<CreateConversationResponse>(
-    '/api/conversations',
-    title ? { title } : {}
-  )
-  return data
+  const now = new Date().toISOString()
+  const id = crypto.randomUUID()
+  const conversation: StoredConversation = {
+    id,
+    title: title?.trim() || '新会话',
+    createdAt: now,
+    updatedAt: now,
+    messages: [],
+  }
+  writeAll([...readAll(), conversation])
+  return {
+    conversation_id: id,
+    session_id: id,
+    task_id: '',
+    title: conversation.title,
+    created_at: now,
+  }
 }
 
-/** 进入聊天页面时读取当前用户的历史会话列表。 */
+/** 读取当前用户的历史会话列表，最近更新的在前。 */
 export async function getConversations(): Promise<
   ConversationListResponse['items']
 > {
-  const { data } =
-    await fastapiClient.get<ConversationListResponse>('/api/conversations')
-  return data.items
+  const items = [...readAll()].sort((a, b) =>
+    b.updatedAt.localeCompare(a.updatedAt)
+  )
+  return items.map((conversation) => ({
+    conversation_id: conversation.id,
+    session_id: conversation.id,
+    title: conversation.title,
+    last_message:
+      conversation.messages[conversation.messages.length - 1]?.content ?? null,
+    updated_at: conversation.updatedAt,
+  }))
 }
 
-/** 删除会话及其服务端保存的全部历史消息。 */
+/** 删除会话及其本地保存的历史消息。 */
 export async function deleteConversation(
   conversationId: string
 ): Promise<void> {
-  await fastapiClient.delete(
-    `/api/conversations/${encodeURIComponent(conversationId)}`
+  writeAll(
+    readAll().filter((conversation) => conversation.id !== conversationId)
   )
 }
 
@@ -49,16 +117,23 @@ export function createMessage(role: ChatRole, content: string): ChatMessage {
   }
 }
 
-/** 读取会话历史；历史以服务端 message_id 和 created_at 为准。 */
+/** 读取会话历史（按时间正序）。 */
 export async function getConversationMessages(
-  conversationId: string,
-  before?: string
+  conversationId: string
 ): Promise<ChatMessage[]> {
-  const { data } = await fastapiClient.get<ConversationMessagesResponse>(
-    `/api/conversations/${encodeURIComponent(conversationId)}/messages`,
-    { params: { limit: 100, ...(before ? { before } : {}) } }
-  )
-  return data.items.map((message) => ({
+  const conversation = readAll().find((item) => item.id === conversationId)
+  if (!conversation) return []
+  const response: ConversationMessagesResponse = {
+    items: conversation.messages.map((message) => ({
+      message_id: message.id,
+      task_id: '',
+      role: message.role,
+      content: message.content,
+      created_at: message.createdAt,
+    })),
+    next_before: null,
+  }
+  return response.items.map((message) => ({
     id: message.message_id,
     role: message.role,
     content: message.content,
@@ -66,77 +141,118 @@ export async function getConversationMessages(
   }))
 }
 
+type ParsedFrame = { event: string; data: string }
+
+function parseFrame(raw: string): ParsedFrame {
+  let event = 'message'
+  const dataLines: string[] = []
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('event:')) event = line.slice(6).trim()
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart())
+  }
+  return { event, data: dataLines.join('\n') }
+}
+
+let messageSeq = 0
+
+function nextMessageId(): string {
+  messageSeq += 1
+  return `msg-${Date.now()}-${messageSeq}`
+}
+
 /**
- * 发送消息并获取 AI 回复。
- * TODO: 接入真实 AI 接口时替换此实现，例如调用 OpenAI 兼容的
- * `/v1/chat/completions`（可通过 Vite dev server proxy 转发避免 API Key 暴露），
- * 将 messages 映射为 [{ role, content }] 后请求即可，无需改动页面组件。
+ * 发送消息并流式接收 AI 回复。
+ *
+ * 请求 `POST /ai/chat/stream`，SSE 事件契约：`start / token / citation /
+ * tool_call / tool_result / end / error`；`token` 事件的 `content` 为增量片段，
+ * 这里累加后通过 `onDelta` 回传完整文本，供界面做打字机效果。
  */
 export async function sendChatMessage(
   conversationId: string,
   content: string,
   onDelta?: (content: string) => void
 ): Promise<string> {
-  const { data } = await fastapiClient.post<{
-    task_id: string
-    assistant_message: { content: string }
-  }>(`/api/conversations/${conversationId}/messages`, { content })
+  const conversations = readAll()
+  const conversation = conversations.find((item) => item.id === conversationId)
+  if (!conversation) throw new Error('会话不存在')
 
-  const baseUrl = import.meta.env.VITE_FASTAPI_API ?? '/py-api'
-  const headers: HeadersInit = { Accept: 'text/event-stream' }
+  const now = new Date().toISOString()
+  conversation.messages.push({
+    id: nextMessageId(),
+    role: 'user',
+    content,
+    createdAt: now,
+  })
+  conversation.updatedAt = now
+  writeAll(conversations)
+
+  const baseUrl = import.meta.env.VITE_JAVA_API ?? '/java-api'
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+    clientid: CLIENT_ID,
+  }
   const accessToken = useAuthStore.getState().auth.accessToken
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`
 
-  const response = await fetch(
-    `${baseUrl}/api/conversations/stream/${encodeURIComponent(data.task_id)}`,
-    { headers }
-  )
+  const response = await fetch(`${baseUrl}/ai/chat/stream`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ sessionId: conversationId, query: content }),
+  })
+  if (response.status === 401) throw new Error('登录状态已失效，请重新登录')
   if (!response.ok) throw new Error(`流式请求失败 (${response.status})`)
 
-  // SSE 事件以空行分隔；最终答案优先取 final 事件，兼容只返回 delta 的服务端。
   const reader = response.body?.getReader()
-  if (!reader) return data.assistant_message.content
-  const decoder = new TextDecoder()
-  let buffer = ''
   let answer = ''
-  let finalAnswer = ''
+  let streamError: string | null = null
 
-  const consume = (block: string) => {
-    let event = 'message'
-    let payload = ''
-    for (const line of block.split('\n')) {
-      if (line.startsWith('event:')) event = line.slice(6).trim()
-      if (line.startsWith('data:')) payload += line.slice(5).trim()
-    }
-    if (!payload) return
-    try {
-      const parsed = JSON.parse(payload) as { answer?: string; delta?: string }
-      if (event === 'delta') {
-        answer += parsed.delta ?? parsed.answer ?? ''
-        onDelta?.(answer)
+  if (reader) {
+    const decoder = new TextDecoder()
+    let buffer = ''
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
+      let boundary = buffer.indexOf('\n\n')
+      while (boundary >= 0) {
+        const frame = parseFrame(buffer.slice(0, boundary))
+        buffer = buffer.slice(boundary + 2)
+        if (frame.event === 'token') {
+          const delta = (JSON.parse(frame.data || '{}') as { content?: string })
+            .content
+          if (delta) {
+            answer += delta
+            onDelta?.(answer)
+          }
+        } else if (frame.event === 'error') {
+          const payload = JSON.parse(frame.data || '{}') as {
+            code?: string
+            message?: string
+          }
+          streamError = payload.message || payload.code || '对话生成失败'
+        }
+        boundary = buffer.indexOf('\n\n')
       }
-      if (event === 'final') {
-        finalAnswer = parsed.answer ?? ''
-        onDelta?.(finalAnswer)
-      }
-    } catch {
-      // 忽略不完整或非 JSON 的 SSE 数据块
     }
   }
 
-  while (true) {
-    const { value, done } = await reader.read()
-    buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done })
-    const blocks = buffer.split('\n\n')
-    buffer = blocks.pop() ?? ''
-    blocks.forEach(consume)
-    // 后端发送 final 后仍保持 SSE 连接，收到最终答案即可结束本次读取。
-    if (finalAnswer) {
-      await reader.cancel()
-      break
+  if (answer) {
+    const latest = readAll()
+    const target = latest.find((item) => item.id === conversationId)
+    if (target) {
+      const finishedAt = new Date().toISOString()
+      target.messages.push({
+        id: nextMessageId(),
+        role: 'assistant',
+        content: answer,
+        createdAt: finishedAt,
+      })
+      target.updatedAt = finishedAt
+      writeAll(latest)
     }
-    if (done) break
   }
-  if (buffer.trim()) consume(buffer)
-  return finalAnswer || answer || data.assistant_message.content
+
+  if (streamError) throw new Error(streamError)
+  return answer
 }

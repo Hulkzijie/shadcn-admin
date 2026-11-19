@@ -1,6 +1,5 @@
 import axios from 'axios'
-import { useAuthStore } from '@/stores/auth-store'
-import { fastapiClient } from '@/lib/api/fastapi-client'
+import { javaClient } from '@/lib/api/java-client'
 import type { PipelineDsl } from '../data/pipeline-types'
 
 export type DryRunIssue = {
@@ -100,21 +99,6 @@ export function toDryRunDsl(dsl: PipelineDsl) {
   }
 }
 
-/** 内网接口所需的身份头；未配置 VITE_INTERNAL_TOKEN 时由后端按本地开发模式放行。 */
-function internalHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {}
-  const token = import.meta.env.VITE_INTERNAL_TOKEN
-  if (token) headers['X-Internal-Token'] = token
-
-  const userId = useAuthStore.getState().auth.user?.userId
-  if (userId !== undefined && userId !== null) {
-    headers['X-User-Id'] = String(userId)
-  }
-  const tenantId = import.meta.env.VITE_APP_TENANT_ID
-  if (tenantId) headers['X-Tenant-Id'] = tenantId
-  return headers
-}
-
 function normalizeResult(data: DryRunResult): DryRunResult {
   return {
     pipelineId: data.pipelineId,
@@ -187,13 +171,17 @@ export async function runPipelineDryRun(params: {
   }
 
   try {
-    const { data } = await fastapiClient.post<DryRunResult>(
-      `/internal/v1/kb-pipelines/${encodeURIComponent(params.pipelineId)}/dry-run`,
+    const res = await javaClient.post<{ code: number; msg: string; data: DryRunResult }>(
+      `/ai/kb-pipelines/${encodeURIComponent(params.pipelineId)}/dry-run`,
       body,
-      { headers: internalHeaders(), timeout: 120_000 }
+      { timeout: 120_000 }
     )
-    return normalizeResult(data)
+    if (res.data.code !== 200) {
+      throw new DryRunError(res.data.msg || '试运行失败')
+    }
+    return normalizeResult(res.data.data)
   } catch (error) {
+    if (error instanceof DryRunError) throw error
     throw toDryRunError(error)
   }
 }

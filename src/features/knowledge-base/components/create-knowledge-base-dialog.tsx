@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FileText, Table2, ImageIcon, Sparkles, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -36,6 +36,8 @@ import {
   uploadFormats,
 } from '../data/knowledge-types'
 import { uploadFile } from '../lib/knowledge-service'
+import { listPipelines } from '../pipeline/lib/pipeline-service'
+import type { PipelineTemplate } from '../pipeline/data/pipeline-types'
 import { UploadZone } from './upload-zone'
 
 const dataTypeIcons: Record<KnowledgeDataType, typeof FileText> = {
@@ -70,6 +72,19 @@ export function CreateKnowledgeBaseDialog({
   const [enhancement, setEnhancement] = useState(false)
   const [embeddingModel, setEmbeddingModel] = useState('qwen3-embedding')
 
+  // 编排模板绑定
+  const [pipelineTemplates, setPipelineTemplates] = useState<PipelineTemplate[]>([])
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>('')
+
+  useEffect(() => {
+    if (!open) return
+    listPipelines()
+      .then((list) =>
+        setPipelineTemplates(list.filter((t) => t.status === 'published'))
+      )
+      .catch(() => setPipelineTemplates([]))
+  }, [open])
+
   // 允许上传的格式随数据类型联动
   const allowedExtensions = useMemo(() => {
     const option = dataTypeOptions.find((o) => o.value === dataType)
@@ -86,6 +101,8 @@ export function CreateKnowledgeBaseDialog({
     setPreprocessRules('')
     setEnhancement(false)
     setEmbeddingModel('qwen3-embedding')
+    setSelectedPipelineId('')
+    setPipelineTemplates([])
   }
 
   // 选择文件后立即上传，逐个文件更新其上传状态
@@ -151,6 +168,7 @@ export function CreateKnowledgeBaseDialog({
         preprocessRules: segmentMode === 'custom' ? preprocessRules.trim() : '',
         enhancement,
         embeddingModel,
+        pipelineId: selectedPipelineId ? Number(selectedPipelineId) : undefined,
       })
     } catch {
       // 错误已由 handleCreate 统一提示，这里保持弹窗开启
@@ -380,6 +398,36 @@ export function CreateKnowledgeBaseDialog({
                       <SelectItem value='qwen3-embedding'>
                         qwen3-embedding CHAT
                       </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                {/* 编排模板 */}
+                <div className='flex flex-wrap items-center justify-between gap-3'>
+                  <div className='space-y-1'>
+                    <Label className='flex items-center gap-2 text-sm font-medium'>
+                      <Layers className='size-4 text-muted-foreground' />
+                      编排模板
+                    </Label>
+                    <p className='text-xs text-muted-foreground'>
+                      选择已发布的入库编排模板，定义文件处理链路
+                    </p>
+                  </div>
+                  <Select
+                    value={selectedPipelineId}
+                    onValueChange={setSelectedPipelineId}
+                  >
+                    <SelectTrigger className='w-52'>
+                      <SelectValue placeholder='不绑定（使用默认）' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pipelineTemplates.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

@@ -11,7 +11,6 @@ import {
   XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,15 +30,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import {
   dataTypeOptions,
   type KnowledgeDataType,
 } from '../../data/knowledge-types'
-import {
-  formatBytes,
-  formatDuration,
-  validateFile,
-} from '../../lib/knowledge-service'
+import { formatBytes, formatDuration, validateFile } from '../../lib/knowledge-service'
 import type { PipelineDsl } from '../data/pipeline-types'
 import {
   DryRunError,
@@ -120,7 +116,11 @@ export function DryRunButton({ pipelineId, dsl, dataType }: DryRunPanelProps) {
             </DialogDescription>
           </DialogHeader>
           {open ? (
-            <DryRunBody pipelineId={pipelineId} dsl={dsl} dataType={dataType} />
+            <DryRunBody
+              pipelineId={pipelineId}
+              dsl={dsl}
+              dataType={dataType}
+            />
           ) : null}
         </DialogContent>
       </Dialog>
@@ -169,20 +169,14 @@ function DryRunBody({ pipelineId, dsl, dataType }: DryRunPanelProps) {
       const data = await runPipelineDryRun({
         pipelineId,
         dsl,
-        ...(text.trim()
-          ? { fileText: text, fileName: fileName || 'dry-run-input.txt' }
-          : {}),
+        ...(text.trim() ? { fileText: text, fileName: fileName || 'dry-run-input.txt' } : {}),
         ...(stopAtNodeId === RUN_TO_END ? {} : { stopAtNodeId }),
       })
       setResult(data)
       if (data.run.status === 'succeeded') {
-        toast.success('试运行通过', {
-          description: `${data.run.nodeRuns.length} 个节点执行完成`,
-        })
+        toast.success('试运行通过', { description: `${data.run.nodeRuns.length} 个节点执行完成` })
       } else {
-        toast.error('试运行未通过', {
-          description: data.run.errorMessage ?? '请查看节点明细',
-        })
+        toast.error('试运行未通过', { description: data.run.errorMessage ?? '请查看节点明细' })
       }
     } catch (error) {
       const next =
@@ -205,9 +199,7 @@ function DryRunBody({ pipelineId, dsl, dataType }: DryRunPanelProps) {
                 ref={fileInputRef}
                 type='file'
                 className='hidden'
-                accept={formats
-                  .map((format) => `.${format.toLowerCase()}`)
-                  .join(',')}
+                accept={formats.map((format) => `.${format.toLowerCase()}`).join(',')}
                 onChange={(event) => {
                   const file = event.target.files?.[0]
                   event.target.value = ''
@@ -309,7 +301,7 @@ function DryRunResultView({ result }: { result: DryRunResult }) {
         >
           {statusLabel}
         </Badge>
-        <span className='text-xs text-muted-foreground tabular-nums'>
+        <span className='text-xs tabular-nums text-muted-foreground'>
           进度 {run.progress}%
         </span>
         <span className='truncate rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground'>
@@ -334,11 +326,7 @@ function DryRunResultView({ result }: { result: DryRunResult }) {
         <IssueGroup title='阻断项' issues={validation.blocking} level='error' />
       ) : null}
       {validation.warnings.length ? (
-        <IssueGroup
-          title='警告项'
-          issues={validation.warnings}
-          level='warning'
-        />
+        <IssueGroup title='警告项' issues={validation.warnings} level='warning' />
       ) : null}
 
       <div className='flex flex-col gap-2'>
@@ -366,7 +354,7 @@ function NodeRunRow({ node }: { node: DryRunNodeRun }) {
           {node.label || node.nodeId}
         </span>
         <span className='text-xs text-muted-foreground'>{label}</span>
-        <span className='text-xs text-muted-foreground tabular-nums'>
+        <span className='text-xs tabular-nums text-muted-foreground'>
           {formatDuration(node.durationMs)}
         </span>
       </div>
@@ -386,14 +374,12 @@ function NodeRunRow({ node }: { node: DryRunNodeRun }) {
 
 function ArtifactRow({ artifact }: { artifact: DryRunArtifact }) {
   const meta = Object.entries(artifact.meta ?? {})
-    .filter(
-      ([, value]) => value !== null && value !== undefined && value !== ''
-    )
+    .filter(([, value]) => value !== null && value !== undefined && value !== '')
     .filter(([, value]) => typeof value !== 'object')
     .slice(0, 5)
 
   return (
-    <div className='ms-6 mt-2 rounded-md bg-muted/50 px-2 py-1.5 text-[11px]'>
+    <div className='mt-2 ms-6 rounded-md bg-muted/50 px-2 py-1.5 text-[11px]'>
       <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
         <Badge variant='outline' className='h-4 px-1 text-[10px]'>
           {artifact.artifactType}

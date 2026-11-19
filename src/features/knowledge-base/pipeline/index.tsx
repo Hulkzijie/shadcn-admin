@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Plus, Search as SearchIcon, Workflow } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,14 +27,20 @@ import { PipelineCard } from './components/pipeline-card'
 /** 入库编排模板列表，嵌入知识库页的「编排模板」标签页。 */
 export function PipelineList() {
   const navigate = useNavigate()
-  const [pipelines, setPipelines] = useState<PipelineTemplate[]>(() =>
-    listPipelines()
-  )
+  const [pipelines, setPipelines] = useState<PipelineTemplate[]>([])
   const [query, setQuery] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<PipelineTemplate | null>(
     null
   )
+
+  const refresh = () => {
+    listPipelines().then(setPipelines).catch(() => {})
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [])
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase()
@@ -46,38 +52,48 @@ export function PipelineList() {
     )
   }, [pipelines, query])
 
-  const refresh = () => setPipelines(listPipelines())
-
-  const handleCreate = (input: {
+  const handleCreate = async (input: {
     name: string
     description: string
     dataType: PipelineTemplate['dataType']
   }) => {
-    const pipeline = createPipeline(input)
-    refresh()
-    toast.success('编排已创建', {
-      description: '已按数据类型生成默认链路，正在进入画布。',
-    })
-    void navigate({
-      to: '/knowledge-base/pipelines/$pipelineId',
-      params: { pipelineId: pipeline.id },
-    })
+    try {
+      const pipeline = await createPipeline(input)
+      refresh()
+      toast.success('编排已创建', {
+        description: '已按数据类型生成默认链路，正在进入画布。',
+      })
+      void navigate({
+        to: '/knowledge-base/pipelines/$pipelineId',
+        params: { pipelineId: pipeline.id },
+      })
+    } catch (e) {
+      toast.error('创建失败', { description: e instanceof Error ? e.message : '' })
+    }
   }
 
-  const handleDuplicate = (pipeline: PipelineTemplate) => {
-    duplicatePipeline(pipeline.id)
-    refresh()
-    toast.success('已复制编排', {
-      description: `包含「${pipeline.name}」的完整链路与参数。`,
-    })
+  const handleDuplicate = async (pipeline: PipelineTemplate) => {
+    try {
+      await duplicatePipeline(pipeline.id)
+      refresh()
+      toast.success('已复制编排', {
+        description: `包含「${pipeline.name}」的完整链路与参数。`,
+      })
+    } catch (e) {
+      toast.error('复制失败', { description: e instanceof Error ? e.message : '' })
+    }
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return
-    deletePipeline(deleteTarget.id)
-    refresh()
-    setDeleteTarget(null)
-    toast.success('编排已删除')
+    try {
+      await deletePipeline(deleteTarget.id)
+      refresh()
+      setDeleteTarget(null)
+      toast.success('编排已删除')
+    } catch (e) {
+      toast.error('删除失败', { description: e instanceof Error ? e.message : '' })
+    }
   }
 
   return (

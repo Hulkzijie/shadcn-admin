@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Copy, History } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,6 +27,7 @@ import {
 import {
   duplicatePipeline,
   getPipeline,
+  listPipelineVersions,
   publishPipeline,
   savePipelineDsl,
 } from './lib/pipeline-service'
@@ -37,14 +38,44 @@ const CURRENT_VERSION = 'current'
 
 export function PipelineEditor({ pipelineId }: { pipelineId: string }) {
   const navigate = useNavigate()
-  const [pipeline, setPipeline] = useState<PipelineTemplate | undefined>(() =>
-    getPipeline(pipelineId)
-  )
+  const [pipeline, setPipeline] = useState<PipelineTemplate | undefined>(undefined)
   const [previewVersion, setPreviewVersion] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    getPipeline(pipelineId).then(async (p) => {
+      if (cancelled) return
+      if (p) {
+        // 加载版本列表补充到 pipeline 对象
+        try {
+          const versions = await listPipelineVersions(pipelineId)
+          if (!cancelled) {
+            setPipeline({ ...p, versions })
+          }
+        } catch {
+          if (!cancelled) setPipeline(p)
+        }
+      } else {
+        setPipeline(undefined)
+      }
+      if (!cancelled) setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [pipelineId])
+
+  if (loading) {
+    return (
+      <div className='flex h-svh w-full items-center justify-center'>
+        <p className='text-sm text-muted-foreground'>加载中…</p>
+      </div>
+    )
+  }
 
   if (!pipeline) {
     return (
-      <div className='flex h-svh flex-col items-center justify-center gap-4 px-6 text-center'>
+      <div className='flex h-svh w-full flex-col items-center justify-center gap-4 px-6 text-center'>
         <p className='text-sm text-muted-foreground'>
           该编排不存在或已被删除。
         </p>
@@ -69,39 +100,58 @@ export function PipelineEditor({ pipelineId }: { pipelineId: string }) {
     ? pipeline.versions.find((item) => item.version === previewVersion)
     : undefined
 
-  const handleSave = (dsl: PipelineDsl) => {
-    const next = savePipelineDsl(pipelineId, dsl)
-    if (!next) return false
-    setPipeline(next)
-    return true
+  const handleSave = async (dsl: PipelineDsl): Promise<boolean> => {
+    try {
+      const next = await savePipelineDsl(pipelineId, dsl)
+      if (!next) return false
+      setPipeline((prev) => (prev ? { ...next, versions: prev.versions } : next))
+      return true
+    } catch (e) {
+      toast.error('保存失败', { description: e instanceof Error ? e.message : '' })
+      return false
+    }
   }
 
-  const handlePublish = () => {
-    const next = publishPipeline(pipelineId)
-    if (!next) {
-      toast.error('发布失败', { description: '该编排可能已被删除' })
-      return
+  const handlePublish = async () => {
+    try {
+      const next = await publishPipeline(pipelineId)
+      if (!next) {
+        toast.error('发布失败', { description: '该编排可能已被删除' })
+        return
+      }
+      // 重新加载版本列表
+      try {
+        const versions = await listPipelineVersions(pipelineId)
+        setPipeline({ ...next, versions })
+      } catch {
+        setPipeline(next)
+      }
+      setPreviewVersion(null)
+      toast.success(`已发布 v${next.latestVersion}`, {
+        description: '发布基于最近一次保存的内容。',
+      })
+    } catch (e) {
+      toast.error('发布失败', { description: e instanceof Error ? e.message : '' })
     }
-    setPipeline(next)
-    setPreviewVersion(null)
-    toast.success(`已发布 v${next.latestVersion}`, {
-      description: '发布基于最近一次保存的内容。',
-    })
   }
 
-  const handleDuplicate = () => {
-    const copy = duplicatePipeline(pipelineId)
-    if (!copy) {
-      toast.error('创建副本失败', { description: '该编排可能已被删除' })
-      return
+  const handleDuplicate = async () => {
+    try {
+      const copy = await duplicatePipeline(pipelineId)
+      if (!copy) {
+        toast.error('创建副本失败', { description: '该编排可能已被删除' })
+        return
+      }
+      toast.success('已生成副本', {
+        description: `${copy.name} 未绑定知识库，可直接编辑后发布。`,
+      })
+      void navigate({
+        to: '/knowledge-base/pipelines/$pipelineId',
+        params: { pipelineId: copy.id },
+      })
+    } catch (e) {
+      toast.error('创建副本失败', { description: e instanceof Error ? e.message : '' })
     }
-    toast.success('已生成副本', {
-      description: `${copy.name} 未绑定知识库，可直接编辑后发布。`,
-    })
-    void navigate({
-      to: '/knowledge-base/pipelines/$pipelineId',
-      params: { pipelineId: copy.id },
-    })
   }
 
   const versionSelect = (

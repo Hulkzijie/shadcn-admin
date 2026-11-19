@@ -86,13 +86,24 @@
   }
 }
 
-/* AI 登录页背景光晕浮动 */
-@keyframes float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
+/* 登录页左侧面板入场 */
+@keyframes wc-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
   }
-  50% {
-    transform: translate3d(20px, -24px, 0) scale(1.08);
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 登录页执行轨迹进度扫描 */
+@keyframes wc-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
   }
 }

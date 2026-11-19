@@ -29,6 +29,8 @@ export type CreateKnowledgeBaseInput = {
   embeddingModel: string
   /** 已通过 /upload 上传成功的文件 id */
   fileIds: string[]
+  /** 绑定的编排模板 ID（可选） */
+  pipelineId?: number
 }
 
 export type KnowledgeBaseItem = {

@@ -22,11 +22,13 @@ import {
   dataTypeOptions,
   type KnowledgeDataType,
 } from '../../data/knowledge-types'
+import type { PipelineExecutor } from '../data/pipeline-types'
 
 export type CreatePipelineInput = {
   name: string
   description: string
   dataType: KnowledgeDataType
+  executor: PipelineExecutor
 }
 
 type CreatePipelineDialogProps = {
@@ -43,11 +45,13 @@ export function CreatePipelineDialog({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [dataType, setDataType] = useState<KnowledgeDataType>('unstructured')
+  const [executor, setExecutor] = useState<PipelineExecutor>('native')
 
   const reset = () => {
     setName('')
     setDescription('')
     setDataType('unstructured')
+    setExecutor('native')
   }
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
@@ -55,7 +59,7 @@ export function CreatePipelineDialog({
     const trimmed = name.trim()
     if (!trimmed) return
 
-    onCreate({ name: trimmed, description: description.trim(), dataType })
+    onCreate({ name: trimmed, description: description.trim(), dataType, executor })
     reset()
     onOpenChange(false)
   }
@@ -121,6 +125,27 @@ export function CreatePipelineDialog({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='pipeline-executor'>执行引擎</Label>
+            <Select
+              value={executor}
+              onValueChange={(value) => setExecutor(value as PipelineExecutor)}
+            >
+              <SelectTrigger id='pipeline-executor' className='w-full'>
+                <SelectValue placeholder='选择执行引擎' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='native'>自研执行引擎</SelectItem>
+                <SelectItem value='langgraph'>LangGraph</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className='text-xs text-muted-foreground'>
+              {executor === 'native'
+                ? '轻量级自研引擎，完全可控，支持条件分支、重试、人工审核'
+                : 'LangGraph 图执行引擎，适用于复杂状态编排'}
+            </p>
           </div>
 
           <DialogFooter>

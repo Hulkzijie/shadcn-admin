@@ -73,6 +73,8 @@ export type PipelineVersion = {
   publishedAt: number
 }
 
+export type PipelineExecutor = 'native' | 'langgraph'
+
 export type PipelineTemplate = {
   id: string
   tenantId: string
@@ -86,6 +88,8 @@ export type PipelineTemplate = {
   /** 历史发布版本，按版本号升序；最后一个即 publishedVersion。 */
   versions: PipelineVersion[]
   dsl: PipelineDsl
+  /** 执行引擎：native 自研 / langgraph */
+  executor: PipelineExecutor
   createdAt: number
   updatedAt: number
 }

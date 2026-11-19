@@ -1,4 +1,6 @@
-import { fastapiClient } from '@/lib/api/fastapi-client'
+import { type AxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/stores/auth-store'
+import { javaClient } from '@/lib/api/java-client'
 import {
   type CreateKnowledgeBaseInput,
   type IngestNode,
@@ -60,6 +62,38 @@ export function filterFiles(
   return { accepted, errors }
 }
 
+/** RuoYi 统一响应结构 */
+interface RuoYiResponse<T> {
+  code: number
+  msg: string
+  data: T
+}
+
+/** 请求 Java 桥接层接口，成功时返回 data；业务错误（code !== 200）抛出异常。 */
+async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  const res = await javaClient.request<RuoYiResponse<T>>(config)
+  const body = res.data
+  if (body && typeof body.code === 'number' && body.code !== 200) {
+    throw new Error(body.msg || `请求失败（${body.code}）`)
+  }
+  return body?.data
+}
+
+/**
+ * 请求分页列表接口：RuoYi 的 TableDataInfo 把 rows 放在响应顶层，
+ * 没有 data 包装，因此不能复用 request<T>。
+ */
+async function requestRows<T>(config: AxiosRequestConfig): Promise<T[]> {
+  const res = await javaClient.request<RuoYiResponse<unknown> & { rows?: T[] }>(
+    config
+  )
+  const body = res.data
+  if (body && typeof body.code === 'number' && body.code !== 200) {
+    throw new Error(body.msg || `请求失败（${body.code}）`)
+  }
+  return Array.isArray(body?.rows) ? body.rows : []
+}
+
 /** 从对象中按候选字段名取第一个非空值，用于兼容后端不同的命名风格 */
 function pick(source: unknown, keys: string | string[]): unknown {
   if (!source || typeof source !== 'object') return undefined
@@ -91,150 +125,113 @@ function pickNumber(
   return undefined
 }
 
-/** 只保留字符串元素，用于 done_list / running_list / fileIds 这类字符串数组 */
-function toStringList(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : []
-}
-
 /**
- * 从创建 / 列表响应中取出每个文件的入库任务摘要。
- * 后端形如 tasks: [{ file_id, file_name, task_id }]，其中 task_id 才是 /status/{task_id} 的入参。
+ * 提取 ID 并保留字符串形态。
+ * 雪花 ID 有 19 位，超过 Number.MAX_SAFE_INTEGER，转成数字会丢失精度
+ * （如 2123253601697533954 → 2123253601697534000），导致按 ID 查询 404。
  */
-function pickIngestTasks(source: unknown): IngestTaskSummary[] {
-  const tasks = pick(source, [
-    'tasks',
-    'taskList',
-    'task_list',
-    'items',
-    'list',
-    'data',
-  ])
-  if (!Array.isArray(tasks)) return []
-  return tasks.flatMap((task) => {
-    const taskId = pickString(task, ['task_id', 'taskId', 'id'])
-    if (!taskId) return []
-    return [
-      {
-        taskId,
-        fileId: pickString(task, ['file_id', 'fileId']),
-        fileName: pickString(task, ['file_name', 'fileName', 'name']),
-        status: normalizeStatus(pick(task, ['status', 'state']), 'pending'),
-      },
-    ]
-  })
-}
-
-/**
- * 入库任务暂存表（kbId → tasks）。
- * 只有 POST /import 会返回 task_id，而创建 / 列表接口都不带 tasks，
- * 因此用 localStorage 缓存，保证关闭弹窗或刷新页面后仍能从卡片查看进度。
- */
-const INGEST_TASK_CACHE_KEY = 'kb-ingest-tasks'
-
-function readIngestTaskCache(): Record<string, IngestTaskSummary[]> {
-  try {
-    const raw = localStorage.getItem(INGEST_TASK_CACHE_KEY)
-    const parsed = raw ? (JSON.parse(raw) as unknown) : null
-    return parsed && typeof parsed === 'object'
-      ? (parsed as Record<string, IngestTaskSummary[]>)
-      : {}
-  } catch {
-    return {}
-  }
-}
-
-function rememberIngestTasks(kbId: string, tasks: IngestTaskSummary[]) {
-  if (tasks.length === 0) return
-  try {
-    const cache = readIngestTaskCache()
-    cache[kbId] = tasks
-    localStorage.setItem(INGEST_TASK_CACHE_KEY, JSON.stringify(cache))
-  } catch {
-    // localStorage 不可用时静默忽略，仅影响刷新后从卡片查看进度
-  }
-}
-
-/** 优先用接口内嵌的 tasks，缺失时回退到缓存的任务 */
-export function getIngestTasks(item: KnowledgeBaseItem): IngestTaskSummary[] {
-  return item.ingestTasks.length > 0
-    ? item.ingestTasks
-    : (readIngestTaskCache()[item.id] ?? [])
-}
-
-/** 知识库 id：列表 / 创建 / 删除响应统一用 kbId */
-const KB_ID_KEYS = ['kbId', 'kb_id']
-/** 文件 id：/upload 响应里的 file_id，即创建接口 fileIds 的入参 */
-const FILE_ID_KEYS = ['file_id', 'fileId']
-
-/** 后端 id 可能是数字（如 task_id: 1），统一转成字符串 */
-function pickId(source: unknown, key: string): string | undefined {
-  if (source && typeof source === 'object' && key in source) {
-    const value = (source as Record<string, unknown>)[key]
-    if (typeof value === 'string' && value.length > 0) return value
-    if (typeof value === 'number') return String(value)
-  }
+function pickId(
+  source: unknown,
+  keys: string | string[]
+): string | undefined {
+  const value = pick(source, keys)
+  if (typeof value === 'string' && value.length > 0) return value
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
   return undefined
 }
 
-function getResponseId(data: unknown): string {
-  const payload = Array.isArray(data) ? data[0] : data
-  for (const key of KB_ID_KEYS) {
-    const value = pickId(payload, key)
-    if (value) return value
+/* ------------------------------------------------------------------ */
+/* 本地存储：上传文件映射（KB 元数据已切换至 Java API）                 */
+/* ------------------------------------------------------------------ */
+
+function currentUserId(): string {
+  const userId = useAuthStore.getState().auth.user?.userId
+  return userId === undefined || userId === null ? 'anonymous' : String(userId)
+}
+
+function fileStorageKey() {
+  return `wisecloud:kb-files:v1:${currentUserId()}`
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw) as unknown
+    return (parsed ?? fallback) as T
+  } catch {
+    return fallback
   }
-  return crypto.randomUUID()
+}
+
+function writeJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // localStorage 不可用时静默忽略
+  }
+}
+
+/** 上传结果缓存：fileId → 对象存储地址与原始文件名，提交入库时使用 */
+type CachedFile = { name: string; url: string }
+type FileCache = Record<string, CachedFile>
+
+function readFileCache(): FileCache {
+  return readJson<FileCache>(fileStorageKey(), {})
+}
+
+function rememberFile(fileId: string, file: CachedFile) {
+  const cache = readFileCache()
+  cache[fileId] = file
+  writeJson(fileStorageKey(), cache)
 }
 
 /**
- * 上传单个文件：POST /py-api/upload（multipart/form-data）。
- * 由弹窗在「选择文件」时调用，返回后端持久化后的文件信息。
+ * 上传单个文件：POST /resource/oss/upload（multipart/form-data）。
+ * 返回的 id 即后续提交入库时定位对象存储地址的键。
  */
 export async function uploadFile(file: File): Promise<UploadedFile> {
   const formData = new FormData()
   formData.append('file', file)
 
-  const { data } = await fastapiClient.post('/upload', formData)
+  const data = await request<Record<string, unknown>>({
+    url: '/resource/oss/upload',
+    method: 'post',
+    data: formData,
+  })
 
-  const fileId = FILE_ID_KEYS.map((key) => pickId(data, key)).find(Boolean)
-  // file_id 是创建接口 fileIds 的唯一来源，缺失说明响应不符合约定，直接失败
-  if (!fileId) throw new Error('上传响应中缺少 file_id')
+  const url = pickString(data, 'url')
+  if (!url) throw new Error('上传响应中缺少文件地址')
 
-  return {
-    id: fileId,
-    name: pickString(data, 'name') ?? file.name,
-    size: file.size,
-    url: pickString(data, 'url'),
-  }
+  const id = pickString(data, ['ossId', 'oss_id']) ?? url
+  const name = pickString(data, ['fileName', 'originalName']) ?? file.name
+  rememberFile(id, { name, url })
+
+  return { id, name, size: file.size, url }
 }
 
 /**
- * 创建知识库：POST /py-api/knowledge-base（JSON）。
- * 文件已在「选择文件」阶段上传完成，这里只提交元数据与文件 id。
+ * 创建知识库：调用 Java API 写入元数据。
+ * 文件已在「选择文件」阶段上传完成，入库由 importFiles 提交。
  */
 export async function createKnowledgeBase(
   input: CreateKnowledgeBaseInput
 ): Promise<KnowledgeBaseItem> {
-  const { data } = await fastapiClient.post('/knowledge-base', {
-    name: input.name,
-    description: input.description,
-    dataType: input.dataType,
-    segmentMode: input.segmentMode,
-    // 后端 segmentLength 为 integer（默认 500），auto 模式不传，避免 null 触发 422
-    ...(input.segmentLength === null
-      ? {}
-      : { segmentLength: input.segmentLength }),
-    preprocessRules: input.preprocessRules,
-    enhancement: input.enhancement,
-    embeddingModel: input.embeddingModel,
-    fileIds: input.fileIds,
+  // Java POST /ai/knowledge-base 返回 R<Long>，data 字段即新建 ID（数字）
+  const rawId = await request<unknown>({
+    url: '/ai/knowledge-base',
+    method: 'post',
+    data: {
+      name: input.name,
+      description: input.description,
+      dataType: input.dataType,
+      segmentMode: input.segmentMode,
+      enhancement: input.enhancement,
+    },
   })
 
-  const id = getResponseId(data)
-  // 创建响应里的 tasks 提供各文件的 task_id，用于后续轮询入库进度
-  const ingestTasks = pickIngestTasks(data)
-  rememberIngestTasks(id, ingestTasks)
+  const id = rawId !== null && rawId !== undefined ? String(rawId) : undefined
+  if (!id) throw new Error('创建知识库响应中缺少 ID')
 
   return {
     id,
@@ -242,7 +239,7 @@ export async function createKnowledgeBase(
     description: input.description,
     dataType: input.dataType,
     fileIds: input.fileIds,
-    ingestTasks,
+    ingestTasks: [],
     fileCount: input.fileIds.length,
     segmentMode: input.segmentMode,
     enhancement: input.enhancement,
@@ -251,16 +248,42 @@ export async function createKnowledgeBase(
 }
 
 /**
- * 提交文件入库：POST /py-api/import（JSON）。
- * 这是唯一返回 task_id 的接口，创建知识库后必须调用，否则无法查询入库进度。
+ * 提交文件入库：逐个调用 POST /ai/kb/{kbId}/documents，
+ * 后端返回的 taskId（即 runId）用于轮询入库进度。
  */
 export async function importFiles(
   kbId: string,
   fileIds: string[]
 ): Promise<IngestTaskSummary[]> {
-  const { data } = await fastapiClient.post('/import', { kbId, fileIds })
-  const tasks = pickIngestTasks(data)
-  rememberIngestTasks(kbId, tasks)
+  const cache = readFileCache()
+
+  const tasks = await Promise.all(
+    fileIds.map(async (fileId) => {
+      const cached = cache[fileId]
+      if (!cached) throw new Error('文件上传信息已失效，请重新上传后再创建')
+
+      const data = await request<Record<string, unknown>>({
+        url: `/ai/kb/${encodeURIComponent(kbId)}/documents`,
+        method: 'post',
+        data: {
+          fileName: cached.name,
+          fileUrl: cached.url,
+          fileType: cached.name.split('.').pop()?.toLowerCase() ?? '',
+        },
+      })
+
+      const taskId = pickString(data, ['taskId', 'runId'])
+      if (!taskId) throw new Error('入库响应中缺少任务 ID')
+
+      return {
+        taskId,
+        fileId,
+        fileName: pickString(data, 'fileName') ?? cached.name,
+        status: normalizeRunStatus(pick(data, 'status')),
+      }
+    })
+  )
+
   return tasks
 }
 
@@ -276,246 +299,202 @@ function normalizeDataType(value: unknown): KnowledgeDataType {
     : 'unstructured'
 }
 
-/** 兼容毫秒 / 秒级时间戳与 ISO 字符串 */
-function normalizeTimestamp(value: unknown): number {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value < 1e12 ? value * 1000 : value
-  }
-  if (typeof value === 'string') {
-    const parsed = Date.parse(value)
-    if (!Number.isNaN(parsed)) return parsed
-  }
-  return Date.now()
-}
-
 function normalizeKnowledgeBase(
   raw: unknown,
   index: number
 ): KnowledgeBaseItem {
-  let id = ''
-  for (const key of KB_ID_KEYS) {
-    id = pickId(raw, key) ?? ''
-    if (id) break
-  }
-
-  const fileIds = toStringList(pick(raw, ['fileIds', 'file_ids']))
-
   return {
-    id: id || `kb-${index}`,
-    name:
-      pickString(raw, ['name', 'kbName', 'kb_name', 'title']) ?? '未命名知识库',
-    description: pickString(raw, ['description', 'desc', 'remark']) ?? '',
-    dataType: normalizeDataType(pick(raw, ['dataType', 'data_type'])),
-    fileIds,
-    // 列表项内嵌 tasks（含 task_id / file_name / status），打开进度弹窗时无需额外请求
-    ingestTasks: pickIngestTasks(raw),
-    fileCount:
-      pickNumber(raw, ['fileCount', 'file_count', 'fileNum', 'file_num']) ??
-      fileIds.length,
-    segmentMode:
-      pickString(raw, ['segmentMode', 'segment_mode']) === 'custom'
-        ? 'custom'
-        : 'auto',
-    // tinyint 0/1、布尔、字符串 '0'/'1' 都能正确判断
-    enhancement:
-      Number(
-        pick(raw, ['enhancement', 'enableEnhancement', 'enable_enhancement'])
-      ) === 1,
-    createdAt: normalizeTimestamp(
-      pick(raw, ['createdAt', 'created_at', 'createTime', 'create_time'])
-    ),
+    id: pickId(raw, 'id') ?? `kb-${index}`,
+    name: pickString(raw, 'name') ?? '未命名知识库',
+    description: pickString(raw, 'description') ?? '',
+    dataType: normalizeDataType(pick(raw, 'dataType')),
+    fileIds: [],
+    ingestTasks: [],
+    fileCount: pickNumber(raw, 'fileCount') ?? 0,
+    segmentMode: pick(raw, 'segmentMode') === 'custom' ? 'custom' : 'auto',
+    enhancement: Boolean(pick(raw, 'enhancement')),
+    createdAt: pickNumber(raw, ['createTime']) ?? Date.now(),
   }
 }
 
-/**
- * 查询知识库列表：GET /py-api/knowledge-base。
- * 响应支持直接返回数组，或包在 { items } / { list } / { data } / { records } 中。
- */
+
+/** 查询知识库列表（Java API，分页取全量前 200 条） */
 export async function fetchKnowledgeBases(): Promise<KnowledgeBaseItem[]> {
-  const { data } = await fastapiClient.get('/knowledge-base')
-  const list = Array.isArray(data)
-    ? data
-    : pick(data, ['items', 'list', 'data', 'records'])
-  if (!Array.isArray(list)) return []
-  return list.map((item, index) => normalizeKnowledgeBase(item, index))
+  const rows = await requestRows<unknown>({
+    url: '/ai/knowledge-base',
+    method: 'get',
+    params: { pageNum: 1, pageSize: 200 },
+  })
+  return rows.map((item, index) => normalizeKnowledgeBase(item, index))
+}
+
+/** 删除知识库（Java API） */
+export async function deleteKnowledgeBase(id: string): Promise<void> {
+  await request<unknown>({
+    url: `/ai/knowledge-base/${encodeURIComponent(id)}`,
+    method: 'delete',
+  })
 }
 
 /**
- * 删除知识库：DELETE /py-api/knowledge-base/{id}。
+ * 绑定知识库与编排模板。
+ * PUT /ai/knowledge-base/{kbId}/pipeline
+ * @param kbId       知识库 ID（字符串）
+ * @param pipelineId 编排模板 ID（数字）
  */
-export async function deleteKnowledgeBase(id: string): Promise<void> {
-  await fastapiClient.delete(`/knowledge-base/${encodeURIComponent(id)}`)
+export async function bindPipeline(kbId: string, pipelineId: number): Promise<void> {
+  await request<unknown>({
+    url: `/ai/knowledge-base/${encodeURIComponent(kbId)}/pipeline`,
+    method: 'put',
+    data: { pipelineId },
+  })
 }
 
-const DONE_KEYWORDS = [
-  'done',
-  'success',
-  'succeeded',
-  'completed',
-  'complete',
-  'finished',
-  'ok',
-]
+/* ------------------------------------------------------------------ */
+/* 入库进度                                                            */
+/* ------------------------------------------------------------------ */
+
+const DONE_KEYWORDS = ['succeeded', 'success', 'done', 'completed', 'skipped']
 const RUNNING_KEYWORDS = [
   'running',
+  'retrying',
   'processing',
   'in_progress',
-  'inprogress',
-  'doing',
-  'started',
+  'waiting_review',
   'executing',
 ]
-const ERROR_KEYWORDS = ['error', 'failed', 'fail', 'failure', 'exception']
-const PENDING_KEYWORDS = ['pending', 'waiting', 'queued', 'todo', 'created']
+const ERROR_KEYWORDS = [
+  'failed',
+  'failure',
+  'blocked',
+  'canceled',
+  'cancelled',
+  'error',
+]
 
-function normalizeStatus(
-  value: unknown,
-  fallback: IngestNodeStatus
-): IngestNodeStatus {
-  if (typeof value !== 'string') return fallback
+/** 后端运行 / 节点状态 → 前端四态 */
+function normalizeRunStatus(value: unknown): IngestNodeStatus {
+  if (typeof value !== 'string') return 'pending'
   const key = value.toLowerCase()
   if (DONE_KEYWORDS.includes(key)) return 'done'
   if (RUNNING_KEYWORDS.includes(key)) return 'running'
   if (ERROR_KEYWORDS.includes(key)) return 'failed'
-  if (PENDING_KEYWORDS.includes(key)) return 'pending'
-  return fallback
+  return 'pending'
 }
 
-/** durations 为「节点名 → 耗时（毫秒）」的映射 */
-function normalizeDurations(value: unknown): Record<string, number> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  const durations: Record<string, number> = {}
-  for (const [name, raw] of Object.entries(value as Record<string, unknown>)) {
-    const ms = typeof raw === 'number' ? raw : Number(raw)
-    if (Number.isFinite(ms)) durations[name] = ms
-  }
-  return durations
-}
-
-/**
- * 归一化节点清单：优先后端返回的完整 pipeline（nodes 数组），
- * 缺失时退回旧结构 done_list / running_list / durations（此时未出现的节点无法得知）。
- */
-function normalizeNodes(raw: unknown): IngestNode[] {
-  const listed = pick(raw, ['nodes', 'node_list'])
-  if (Array.isArray(listed)) {
-    return listed.map((node) => ({
+/** 把运行快照里的 nodeRuns 映射为前端节点清单 */
+function normalizeNodeRuns(raw: unknown): IngestNode[] {
+  if (!Array.isArray(raw)) return []
+  return raw.map((node) => {
+    const error = pick(node, 'error')
+    return {
       name:
-        pickString(node, ['name', 'node_name', 'nodeName', 'title']) ??
+        pickString(node, ['label', 'name', 'nodeId', 'nodeKind']) ??
         '未命名节点',
-      status: normalizeStatus(pick(node, ['status', 'state']), 'pending'),
-      durationMs:
-        pickNumber(node, ['duration_ms', 'durationMs', 'duration']) ?? null,
-      message: pickString(node, [
-        'message',
-        'error',
-        'error_message',
-        'errorMessage',
-        'reason',
-      ]),
-    }))
-  }
-
-  const doneList = toStringList(pick(raw, ['done_list', 'doneList']))
-  const runningList = toStringList(pick(raw, ['running_list', 'runningList']))
-  const durations = normalizeDurations(pick(raw, ['durations']))
-
-  const names: string[] = []
-  for (const name of [...Object.keys(durations), ...doneList, ...runningList]) {
-    if (!names.includes(name)) names.push(name)
-  }
-
-  return names.map((name) => ({
-    name,
-    status: doneList.includes(name)
-      ? 'done'
-      : runningList.includes(name)
-        ? 'running'
-        : 'pending',
-    durationMs: durations[name] ?? null,
-  }))
+      status: normalizeRunStatus(pick(node, 'status')),
+      durationMs: pickNumber(node, ['durationMs', 'duration_ms']) ?? null,
+      message:
+        pickString(node, ['errorMessage', 'message']) ??
+        pickString(error, ['message', 'detail']),
+    }
+  })
 }
 
 /**
- * 归一化 GET /py-api/status/{task_id} 的响应：
- * { task_id, file_id, file_name, status, current_node, nodes[], total_ms }。
- * summary 来自列表项 / 创建响应，用于在 /status 未返回文件名时兜底。
+ * 归一化 GET /ai/kb/runs/{runId} 的运行快照：
+ * { runId, fileName, status, currentNodeId, progress, nodeRuns[], startedAt, endedAt }
  */
-function normalizeTaskStatus(
+function normalizeRunSnapshot(
   raw: unknown,
   summary: IngestTaskSummary
 ): IngestTask {
-  const nodes = normalizeNodes(raw)
-  const durations = normalizeDurations(pick(raw, ['durations']))
-  const status = normalizeStatus(pick(raw, ['status', 'state']), 'pending')
-  const doneCount = nodes.filter((node) => node.status === 'done').length
+  const rawNodes = pick(raw, 'nodeRuns')
+  const nodes = normalizeNodeRuns(rawNodes)
+  const status = normalizeRunStatus(pick(raw, 'status'))
+  const currentNodeId = pickString(raw, ['currentNodeId', 'current_node'])
   const runningNode = nodes.find((node) => node.status === 'running')
+  const doneCount = nodes.filter((node) => node.status === 'done').length
+
+  const startedAt = pickNumber(raw, ['startedAt', 'started_at'])
+  const endedAt = pickNumber(raw, ['endedAt', 'ended_at'])
+  const elapsedMs =
+    startedAt !== undefined && endedAt !== undefined && endedAt >= startedAt
+      ? endedAt - startedAt
+      : nodes.reduce((sum, node) => sum + (node.durationMs ?? 0), 0)
+
+  // currentNodeId 是节点 ID，展示时优先用该节点自身的 label
+  const currentRawNode =
+    currentNodeId && Array.isArray(rawNodes)
+      ? rawNodes.find(
+          (node) => pickString(node, ['nodeId', 'node_id']) === currentNodeId
+        )
+      : undefined
+  const currentLabel = pickString(currentRawNode, ['label', 'name', 'nodeKind'])
 
   return {
-    id: pickString(raw, ['task_id', 'taskId']) ?? summary.taskId,
-    fileId: pickString(raw, ['file_id', 'fileId']) ?? summary.fileId,
-    fileName: pickString(raw, ['file_name', 'fileName']) ?? summary.fileName,
+    id: pickString(raw, ['runId', 'taskId']) ?? summary.taskId,
+    fileId: pickString(raw, ['fileId', 'file_id']) ?? summary.fileId,
+    fileName: pickString(raw, ['fileName', 'file_name']) ?? summary.fileName,
     status,
-    // 未显式返回时，用运行中的节点作为「当前卡在哪个节点」
     currentNode:
-      pickString(raw, ['current_node', 'currentNode']) ??
+      currentLabel ??
       runningNode?.name ??
-      null,
+      (status === 'running' ? (currentNodeId ?? null) : null),
     progress:
-      pickNumber(raw, ['progress', 'percent', 'percentage']) ??
+      pickNumber(raw, ['progress', 'percent']) ??
       (status === 'done'
         ? 100
         : nodes.length > 0
           ? Math.round((doneCount / nodes.length) * 100)
           : 0),
-    elapsedMs:
-      pickNumber(raw, ['total_ms', 'totalMs', 'elapsed_ms', 'elapsedMs']) ??
-      Object.values(durations).reduce((sum, ms) => sum + ms, 0),
+    elapsedMs,
     nodes,
   }
 }
 
-/**
- * 查询入库进度：逐个请求 GET /py-api/status/{task_id}，task_id 取自任务摘要。
- */
+/** 按任务摘要逐个查询运行快照 */
 export async function fetchIngestTasks(
   summaries: IngestTaskSummary[]
 ): Promise<IngestTask[]> {
   return Promise.all(
     summaries.map(async (summary) => {
-      const { data } = await fastapiClient.get(
-        `/status/${encodeURIComponent(summary.taskId)}`
-      )
-      return normalizeTaskStatus(data, summary)
+      const data = await request<Record<string, unknown>>({
+        url: `/ai/kb/runs/${encodeURIComponent(summary.taskId)}`,
+        method: 'get',
+      })
+      return normalizeRunSnapshot(data, summary)
     })
   )
 }
 
 /**
- * 查询已有知识库的入库任务。列表接口可能不包含 task_id，
- * 此接口用于点击「查看入库进度」时补拉任务并兼容旧后端响应。
+ * 按知识库查询入库任务（直接查后端运行列表）。
  */
 export async function fetchKnowledgeBaseIngestTasks(
   knowledgeBaseId: string
 ): Promise<IngestTask[]> {
-  const { data } = await fastapiClient.get(
-    `/knowledge-base/${encodeURIComponent(knowledgeBaseId)}/ingest-tasks`
-  )
-  const list = Array.isArray(data)
-    ? data
-    : pick(data, ['tasks', 'taskList', 'task_list', 'items', 'list', 'data'])
-  if (!Array.isArray(list)) return []
-
-  return list.map((raw, index) => {
-    const taskId =
-      pickString(raw, ['task_id', 'taskId', 'id']) ?? `task-${index}`
-    return normalizeTaskStatus(raw, {
-      taskId,
-      fileId: pickString(raw, ['file_id', 'fileId']),
-      fileName: pickString(raw, ['file_name', 'fileName', 'name']),
-      status: normalizeStatus(pick(raw, ['status', 'state']), 'pending'),
-    })
+  const rows = await requestRows<unknown>({
+    url: '/ai/ingest-runs',
+    method: 'get',
+    params: { kbId: knowledgeBaseId, pageNum: 1, pageSize: 50 },
   })
+  const summaries: IngestTaskSummary[] = rows.flatMap((row) => {
+    const taskId = pickString(row, ['runId', 'run_id'])
+    if (!taskId) return []
+    return [{
+      taskId,
+      fileId: pickString(row, ['fileId', 'file_id']),
+      fileName: pickString(row, ['fileName', 'file_name']),
+      status: normalizeRunStatus(pick(row, 'status')),
+    }]
+  })
+
+  return fetchIngestTasks(summaries)
+}
+
+/** 优先用接口内嵌的 tasks，缺失时回退到本地缓存的摘要 */
+export function getIngestTasks(item: KnowledgeBaseItem): IngestTaskSummary[] {
+  return item.ingestTasks
 }
 
 /**

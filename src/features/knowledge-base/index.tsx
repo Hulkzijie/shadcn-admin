@@ -29,6 +29,7 @@ import {
   type KnowledgeBaseItem,
 } from './data/knowledge-types'
 import {
+  bindPipeline,
   createKnowledgeBase,
   deleteKnowledgeBase,
   fetchKnowledgeBases,
@@ -66,6 +67,10 @@ export function KnowledgeBase() {
       setIsSubmitting(true)
 
       const item = await createKnowledgeBase(data)
+      // 绑定编排模板（如选择了）
+      if (data.pipelineId) {
+        await bindPipeline(item.id, data.pipelineId)
+      }
       // /import 返回各文件的 task_id，是后续轮询入库进度的唯一来源
       const ingestTasks = await importFiles(item.id, item.fileIds)
       setProgressTarget({ ...item, ingestTasks })
